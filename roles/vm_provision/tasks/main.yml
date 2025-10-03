@@ -1,0 +1,10 @@
+---
+# tasks file for vm_provision
+- name: download images
+  ansible.builtin.include_tasks: rhel_images.yml  
+
+- name: VMs provisioning
+  ansible.builtin.include_tasks: provision_vms.yml  
+
+- name: vbmc
+  ansible.builtin.include_tasks: vms_vbmc.yml  

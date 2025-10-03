@@ -1,0 +1,22 @@
+parameters:
+  rhnuser: {{ rhnuser | quote }}
+  rhnpassword: {{ rhnpassword | quote }}
+
+vms:
+{% for name in controller_names %}
+  {{ name }}:
+    memory: 32768
+    numcpus: 8
+    disks:
+      - size: 100
+        interface: "sata"
+      - size: 50
+        interface: "sata"
+      - size: 50
+        interface: "sata"
+      - size: 50
+        interface: "sata"
+    nets:
+      - "br-provisioning"
+      - "br-external"
+{% endfor %}

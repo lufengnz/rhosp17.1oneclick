@@ -1,0 +1,13 @@
+---
+# tasks file for kcli
+- name: Change home mount to images 
+  ansible.builtin.include_tasks: change_mountpoint.yml
+
+- name: libvirt install 
+  ansible.builtin.include_tasks: install_libvirt.yml
+
+- name: configuration tasks
+  ansible.builtin.include_tasks: config.yml
+
+- name: firewall setup
+  ansible.builtin.include_tasks: firewall.yml

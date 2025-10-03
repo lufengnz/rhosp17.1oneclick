@@ -1,0 +1,7 @@
+domain_name: "lufeng.local"
+idm_password: "Redhat123^"
+
+controller_names:
+  - controller0
+  - controller1
+  - controller2

@@ -1,0 +1,33 @@
+---
+# Change mountpoint from /home to /var/lib/libvirt/images
+- name: Update fstab to change mountpoint from /home to /var/lib/libvirt/images
+  replace:
+    path: /etc/fstab
+    regexp: '\/home'
+    replace: '/var/lib/libvirt/images'
+
+- name: Unmount /home directory
+  command: umount /home
+  ignore_errors: yes
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Create /var/lib/libvirt/images directory
+  file:
+    path: /var/lib/libvirt/images
+    state: directory
+    mode: '0755'
+
+- name: Mount all filesystems from fstab
+  command: mount -a
+  ignore_errors: yes
+
+- name: Set ACL for root user on /var/lib/libvirt/images
+  acl:
+    path: /var/lib/libvirt/images
+    entity: root
+    etype: user
+    permissions: rwx
+    state: present

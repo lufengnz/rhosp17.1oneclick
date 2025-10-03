@@ -1,0 +1,13 @@
+nodes:
+{% for result in mac_addresses.results %}
+  - ports:
+      - address: "{{ result.stdout }}"
+        physical_network: ctlplane
+    name: "{{ result.item.name }}"
+    arch: "x86_64"
+    pm_type: "ipmi"
+    pm_user: "admin"
+    pm_password: "{{ vbmc_password }}"
+    pm_addr: "{{ vbmc_ip }}"
+    pm_port: "{{ result.item.port }}"
+{% endfor %}

@@ -1,0 +1,41 @@
+- name: Set hostname to idm.{{ domain_name }}
+  hostname:
+    name: "idm.{{ domain_name }}"
+
+- name: Reset connection for new idm FQDN
+  ansible.builtin.meta: reset_connection
+
+- name: Configure eth1 with static IP 192.168.24.200/24
+  nmcli:
+    type: ethernet
+    conn_name: "System eth1"
+    ifname: eth1
+    ip4: 192.168.24.200/24
+    method4: manual
+    state: present
+
+- name: Bring up eth1 connection
+  nmcli:
+    conn_name: "System eth1"
+    state: up
+
+- name: Configure eth2 with static IP 10.0.0.200/24
+  nmcli:
+    type: ethernet
+    conn_name: "System eth2"
+    ifname: eth2
+    ip4: 10.0.0.200/24
+    method4: manual
+    state: present
+
+- name: Bring up eth2 connection
+  nmcli:
+    conn_name: "System eth2"
+    state: up
+
+- name: Add idm entry to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "192.168.24.200 idm.{{ domain_name }} idm"
+    state: present
+    backup: yes

@@ -1,0 +1,8 @@
+- name: Run undercloud installation with real-time output
+  command: openstack undercloud install
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+  register: result
+  failed_when: result.rc != 0

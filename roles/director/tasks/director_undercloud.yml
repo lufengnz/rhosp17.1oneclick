@@ -1,0 +1,25 @@
+- name: Deploy containers-prepare-parameter.yaml template
+  template:
+    src: containers-prepare-parameter.yaml.j2
+    dest: /home/stack/containers-prepare-parameter.yaml
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Create custom-undercloud-params.yaml
+  copy:
+    content: |
+      parameter_defaults:
+        Debug: True
+    dest: /home/stack/custom-undercloud-params.yaml
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Deploy undercloud.conf template
+  template:
+    src: undercloud.conf.j2
+    dest: /home/stack/undercloud.conf
+    owner: stack
+    group: stack
+    mode: '0644'

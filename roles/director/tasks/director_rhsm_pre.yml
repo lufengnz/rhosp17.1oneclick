@@ -1,0 +1,33 @@
+- name: Set RHEL release to 9.2
+  command: subscription-manager release --set=9.2
+  register: release_set
+  changed_when: "'Release set to 9.2' in release_set.stdout"
+  failed_when: release_set.rc != 0
+
+- name: Disable all repositories
+  redhat_subscription:
+    state: present
+    disable_repos: '*'
+
+- name: Enable required repositories
+  redhat_subscription:
+    state: present
+    enable_repos: "{{ enabled_repositories }}"
+
+- name: Update all packages
+  dnf:
+    name: '*'
+    state: latest
+    update_cache: yes
+
+- name: Reboot the system
+  reboot:
+    reboot_timeout: 300
+
+- name: Install python3-tripleoclient and ipmitool
+  dnf:
+    name:
+      - python3-tripleoclient
+      - ipmitool
+    state: present
+    update_cache: yes

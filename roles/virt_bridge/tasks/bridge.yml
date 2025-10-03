@@ -1,0 +1,30 @@
+- name: Ensure libvirt networks are defined and active
+  loop: "{{ libvirt_networks }}"
+  loop_control:
+    loop_var: network
+  block:
+    - name: Check if {{ network.name }} network exists
+      command: virsh net-info {{ network.name }}
+      register: net_check
+      changed_when: false
+      failed_when: net_check.rc not in [0, 1]
+
+    - name: Render and define {{ network.name }} network if missing
+      when: net_check.rc == 1
+      block:
+        - name: Render {{ network.name }} network XML from template
+          template:
+            src: libvirt_network.xml.j2
+            dest: "/root/{{ network.name }}.xml"
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: Define {{ network.name }} libvirt network
+          command: virsh net-define /root/{{ network.name }}.xml
+
+        - name: Enable autostart for {{ network.name }}
+          command: virsh net-autostart {{ network.name }}
+
+        - name: Start {{ network.name }} network
+          command: virsh net-start {{ network.name }}

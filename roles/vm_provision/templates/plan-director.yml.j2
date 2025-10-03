@@ -1,0 +1,16 @@
+parameters:
+  rhnuser: {{ rhnuser | quote }}
+  rhnpassword: {{ rhnpassword | quote }}
+
+vms:
+  director:
+    image: "rhel9"
+    memory: 24048
+    numcpus: 8
+    disks:
+      - size: 100
+        interface: "sata"
+    nets:
+      - "default"
+      - "br-provisioning"
+      - "br-external"

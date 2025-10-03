@@ -1,0 +1,14 @@
+- name: Ensure chrony is installed
+  dnf:
+    name: chrony
+    state: present
+
+- name: Configure chrony using rhel-system-roles.timesync
+  include_role:
+    name: rhel-system-roles.timesync
+  vars:
+    timesync_ntp_servers:
+      - hostname: 192.168.24.254
+        iburst: yes
+    timesync_service_state: started
+    timesync_service_enabled: true

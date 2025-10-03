@@ -1,0 +1,13 @@
+[DEFAULT]
+container_images_file = /home/stack/containers-prepare-parameter.yaml
+local_interface = {{ undercloud_local_interface | default('eth1') }}
+overcloud_domain_name = {{ domain_name }}
+undercloud_nameservers = {{ undercloud_nameserver | default('10.0.0.200') }}
+clean_nodes = true
+generate_service_certificate = true
+undercloud_ntp_servers = {{ undercloud_nameserver | default('10.0.0.200') }}
+custom_env_files = /home/stack/custom-undercloud-params.yaml
+
+[ctlplane-subnet]
+masquerade = true
+dns_nameservers = {{ undercloud_nameserver | default('10.0.0.200') }}

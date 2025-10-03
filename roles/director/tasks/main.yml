@@ -1,0 +1,26 @@
+---
+# tasks file for director
+- name: director network preparation
+  ansible.builtin.include_tasks: director_pre.yml
+
+- name: director ntp preparation
+  ansible.builtin.include_tasks: director_ntp.yml
+
+- name: director subscription manager preparation
+  ansible.builtin.include_tasks: director_rhsm_pre.yml
+
+- name: director initate stack user
+  ansible.builtin.include_tasks: director_init_stack_user.yml
+
+- name: director configure undercloud
+  ansible.builtin.include_tasks: director_undercloud.yml
+
+- name: director configure tls
+  ansible.builtin.include_tasks: director_tls.yml
+
+- name: director undercloud install
+  ansible.builtin.include_tasks: director_undercloud_install.yml
+
+- name: director overcloud configure
+  ansible.builtin.include_tasks: director_overcloud_configure.yml
+

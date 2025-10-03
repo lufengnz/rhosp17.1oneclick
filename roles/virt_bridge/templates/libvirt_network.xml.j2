@@ -1,0 +1,13 @@
+<network xmlns:dnsmasq='http://libvirt.org/schemas/network/dnsmasq/1.0'>
+  <name>{{ network.name }}</name>
+  <bridge name='{{ network.name }}' zone="libvirt"/>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <ip address='{{ network.ip_address }}' netmask='{{ network.netmask }}'/>
+  <dnsmasq:options>
+    <dnsmasq:option value='addn-hosts=/etc/hosts'/>
+  </dnsmasq:options>
+</network>

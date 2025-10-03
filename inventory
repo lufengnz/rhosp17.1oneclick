@@ -1,0 +1,16 @@
+[physical_hardware]
+localhost
+
+[undercloud]
+director ansible_timeout=7200
+
+[idm]
+idm
+
+[remote_hosts:children]
+undercloud
+idm
+
+[remote_hosts:vars]
+ansible_user=root
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'

@@ -1,0 +1,13 @@
+---
+# tasks file for idm
+- name: idm network preparation
+  ansible.builtin.include_tasks: idm_pre.yml
+
+- name: idm ntp setup
+  ansible.builtin.include_tasks: idm_ntp.yml
+
+- name: idm firewall setup
+  ansible.builtin.include_tasks: idm_firewall.yml
+
+- name: idm installation setup
+  ansible.builtin.include_tasks: idm_install.yml

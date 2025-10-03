@@ -1,0 +1,14 @@
+parameter_defaults:
+  EnableFencing: true
+  FencingConfig:
+    devices:
+{% for result in mac_addresses.results %}
+      - agent: fence_ipmilan
+        host_mac: "{{ result.stdout }}"
+        params:
+          ipaddr: "{{ vbmc_ip }}"
+          ipport: '{{ result.item.port }}'
+          lanplus: true
+          login: admin
+          passwd: "{{ vbmc_password }}"
+{% endfor %}

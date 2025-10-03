@@ -1,0 +1,46 @@
+- name: Controller
+  count: 3
+  defaults:
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: external
+      subnet: external_subnet
+    - network: internal_api
+      subnet: internal_api_subnet
+    - network: storage
+      subnet: storage_subnet
+    - network: storage_mgmt
+      subnet: storage_mgmt_subnet
+    - network: tenant
+      subnet: tenant_subnet
+    network_config:
+      template: /home/stack/central/two_interfaces.j2
+      default_route_network:
+      - external
+  instances:
+  - hostname: central-controller-0
+    name: controller0
+  - hostname: central-controller-1
+    name: controller1 
+  - hostname: central-controller-2
+    name: controller2
+- name: Compute
+  count: 1
+  defaults:
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: external
+      subnet: external_subnet
+    - network: internal_api
+      subnet: internal_api_subnet
+    - network: tenant
+      subnet: tenant_subnet
+    - network: storage
+      subnet: storage_subnet
+    network_config:
+      template: /home/stack/central/two_interfaces.j2
+  instances:
+  - hostname: central-novacompute-0
+    name: compute0

@@ -1,0 +1,11 @@
+parameter_defaults:
+  ServiceNetMap:
+    IronicApiNetwork: external
+    IronicNetwork: external 
+  IronicCleaningDiskErase: metadata
+  IronicInspectorSubnets:
+    - ip_range: 10.0.0.101,10.0.0.119
+  IPAImageURLs: '["http://10.0.0.100:8088/agent.kernel", "http://10.0.0.100:8088/agent.ramdisk"]'
+  IronicInspectorInterface: 'br-ex'
+  ControllerExtraConfig:
+    ironic::drivers::pxe::pxe_append_params: "nofb nomodeset vga=normal ipa-insecure=1"

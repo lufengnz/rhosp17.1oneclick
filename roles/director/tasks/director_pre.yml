@@ -1,0 +1,48 @@
+- name: Set hostname to director.{{ domain_name }}
+  hostname:
+    name: "director.{{ domain_name }}"
+
+- name: Reset connection for new idm FQDN
+  meta: reset_connection
+
+- name: Configure eth1 with static IP 192.168.24.100/24
+  nmcli:
+    type: ethernet
+    conn_name: "System eth1"
+    ifname: eth1
+    ip4: 192.168.24.100/24
+    method4: manual
+    state: present
+
+- name: Bring up eth1 connection
+  nmcli:
+    conn_name: "System eth1"
+    state: up
+
+- name: Configure eth2 with static IP 10.0.0.100/24
+  nmcli:
+    type: ethernet
+    conn_name: "System eth2"
+    ifname: eth2
+    ip4: 10.0.0.100/24
+    method4: manual
+    state: present
+
+- name: Bring up eth2 connection
+  nmcli:
+    conn_name: "System eth2"
+    state: up
+
+- name: Add idm entry to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "10.0.0.200 idm.{{ domain_name }} idm"
+    state: present
+    backup: yes
+
+- name: Add director entry to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "192.168.24.100 director.ctlplane.{{ domain_name }} director.{{ domain_name }} director"
+    state: present
+    backup: yes

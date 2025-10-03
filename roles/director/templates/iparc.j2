@@ -1,0 +1,8 @@
+export IPA_DOMAIN={{ domain_name }}
+export IPA_REALM={{ domain_name | upper }}
+export IPA_ADMIN_USER=admin
+export IPA_ADMIN_PASSWORD={{ idm_password | quote }}
+export IPA_SERVER_HOSTNAME=idm.{{ domain_name }}
+export USER=stack
+export CLOUD_DOMAIN={{ domain_name }}
+export UNDERCLOUD_FQDN=director.ctlplane.{{ domain_name }}

@@ -1,0 +1,44 @@
+- name: Install IPA client packages
+  dnf:
+    name: "{{ ipa_client_packages }}"
+    state: present
+    update_cache: yes
+
+- name: Deploy iparc environment file from template
+  template:
+    src: iparc.j2
+    dest: /home/stack/iparc
+    owner: stack
+    group: stack
+    mode: '0644'
+  no_log: true
+
+- name: Run undercloud IPA installation playbook
+  command: >
+    ansible-playbook
+    --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+  environment:
+    IPA_DOMAIN: "{{ domain_name }}"
+    IPA_REALM: "{{ domain_name | upper }}"
+    IPA_ADMIN_USER: "admin"
+    IPA_ADMIN_PASSWORD: "{{ idm_password }}"
+    IPA_SERVER_HOSTNAME: "idm.{{ domain_name }}"
+    USER: "stack"
+    CLOUD_DOMAIN: "{{ domain_name }}"
+    UNDERCLOUD_FQDN: "director.ctlplane.{{ domain_name }}"
+  register: ipa_install_result
+  failed_when: ipa_install_result.rc != 0
+  no_log: true
+
+- name: Create TLS parameters file
+  template:
+    src: tls-parameters.yaml.j2
+    dest: /home/stack/central/tls-parameters.yaml
+    owner: stack
+    group: stack
+    mode: '0644'

@@ -1,0 +1,6 @@
+parameter_defaults:
+  ComputeParameters:
+    KernelArgs: "tsx=off"
+  TimeZone: 'Asia/Tokyo'
+  OctaviaLoadBalancerTopology: "ACTIVE_STANDBY"
+  NovaAllowResizeToSameHost: true

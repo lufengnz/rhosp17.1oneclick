@@ -1,0 +1,4 @@
+---
+# tasks file for virt_bridge
+- name: virt bridge configuration
+  ansible.builtin.include_tasks: bridge.yml  

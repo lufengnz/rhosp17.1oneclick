@@ -1,0 +1,320 @@
+- name: Install RHOSP director images
+  dnf:
+    name:
+      - rhosp-director-images-uefi-x86_64
+      - rhosp-director-images-ipa-x86_64
+    state: present
+    update_cache: yes
+
+- name: Extract RHOSP director images
+  unarchive:
+    src: "{{ item }}"
+    dest: /home/stack/images
+  loop:
+    - /usr/share/rhosp-director-images/ironic-python-agent-latest.tar
+    - /usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest.tar
+  become: yes
+  become_user: stack
+
+- name: Upload overcloud images to Glance
+  shell: source ~/stackrc && openstack overcloud image upload --image-path /home/stack/images/
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: image_upload
+  failed_when: image_upload.rc != 0
+
+- name: Generate roles_data.yaml for Controller and Compute roles
+  shell: source ~/stackrc && openstack overcloud role generate -o /home/stack/central/roles_data.yaml Controller Compute
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: role_generate
+  failed_when: role_generate.rc != 0
+
+- name: Add CephOSD service to roles_data.yaml after CephRgw
+  lineinfile:
+    path: /home/stack/central/roles_data.yaml
+    insertafter: '^\s*- OS::TripleO::Services::CephRgw'
+    line: "    - OS::TripleO::Services::CephOSD"
+    backup: yes
+    state: present
+
+- name: Copy default network isolation template
+  copy:
+    src: /usr/share/openstack-tripleo-heat-templates/network-data-samples/default-network-isolation.yaml
+    dest: /home/stack/central/network_data.yaml
+    remote_src: yes
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Copy default network isolation template
+  copy:
+    src: /usr/share/openstack-tripleo-heat-templates/network-data-samples/vip-data-default-network-isolation.yaml
+    dest: /home/stack/central/vip_data.yaml
+    remote_src: yes
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Update gateway_ip in network_data.yaml
+  lineinfile:
+    path: /home/stack/central/network_data.yaml
+    regexp: '^      gateway_ip: 10.0.0.1$'
+    line: '      gateway_ip: 10.0.0.254'
+    backup: yes
+
+- name: Update end IP in network_data.yaml
+  lineinfile:
+    path: /home/stack/central/network_data.yaml
+    regexp: '^          end: 10.0.0.250$'
+    line: '          end: 10.0.0.100'
+    backup: yes
+
+- name: Remove vlan: 10 line from network_data.yaml
+  lineinfile:
+    path: /home/stack/central/network_data.yaml
+    regexp: '^      vlan: 10$'
+    state: absent
+    backup: yes
+
+- name: Provision overcloud networks
+  shell: source ~/stackrc && openstack overcloud network provision --output /home/stack/central/overcloud-networks-deployed.yaml /home/stack/central/network_data.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: network_provision
+  failed_when: network_provision.rc != 0
+
+- name: Ensure output file overcloud-networks-deployed.yaml exists
+  stat:
+    path: /home/stack/central/overcloud-networks-deployed.yaml
+  register: networks_deployed
+  failed_when: not networks_deployed.stat.exists 
+
+- name: Provision overcloud networks vip
+  shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: network_provision_vip
+  failed_when: network_provision_vip.rc != 0
+
+- name: Ensure output file overcloud-vip-deployed.yaml exists
+  stat:
+    path: /home/stack/central/overcloud-vip-deployed.yaml
+  register: vip_deployed
+  failed_when: not vip_deployed.stat.exists 
+
+- name: Deploy two_interfaces.j2 file
+  copy:
+    src: two_interfaces.j2
+    dest: /home/stack/central/two_interfaces.j2
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Ensure nodes.yaml file exists
+  stat:
+    path: /home/stack/central/nodes.yaml
+  register: nodes_file
+  failed_when: not nodes_file.stat.exists 
+
+- name: Ensure fencing.yaml file exists
+  stat:
+    path: /home/stack/central/fencing.yaml
+  register: fencing_file
+  failed_when: not fencing_file.stat.exists 
+
+- name: import overcloud nodes
+  shell: source ~/stackrc && openstack overcloud node import ~/nodes.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: node_import
+  failed_when: node_import.rc != 0
+
+- name: Check that all nodes are in manageable state
+  shell: source ~/stackrc && openstack baremetal node list -c "Provisioning State" -f value | grep -v manageable | wc -l
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: non_manageable_count
+  failed_when: non_manageable_count.stdout | int > 0
+  changed_when: false
+
+- name: Configure all nodes
+  shell: source ~/stackrc && openstack overcloud node configure $(openstack baremetal node list -c UUID -f value)
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: configure_nodes
+  failed_when: configure_nodes.rc != 0
+
+- name: Introspect all manageable nodes and provide them available
+  shell: source ~/stackrc && openstack baremetal node introspect  --all-manageable --provide
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: introspect_nodes
+  failed_when: introspect_nodes.rc != 0
+
+- name: Check that all nodes are in available state
+  shell: source ~/stackrc && openstack baremetal node list -c "Provisioning State" -f value | grep -v available | wc -l
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: non_available_count
+  failed_when: non_available_count.stdout | int > 0
+  changed_when: false
+
+- name: Set root device size for controller nodes
+  shell: source ~/stackrc && openstack baremetal node set --property root_device='{"size": "100"}' {{ item }}
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  loop: "{{ controller_names }}"
+  register: root_device_result
+  failed_when: root_device_result.rc != 0
+
+- name: Update nodes properties
+  shell: |
+    source ~/stackrc
+    openstack baremetal node list -f value -c UUID | while read NODE; do
+      openstack baremetal node set --property capabilities="boot_mode:bios,$(openstack baremetal node show $NODE -f json -c properties | jq -r .properties.capabilities | sed 's/boot_mode:[^,]*,//g')" $NODE
+    done
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: update_property_result
+  failed_when: update_property_result.rc != 0
+
+- name: Copy overcloud-baremetal-deploy.yaml file
+  copy:
+    src: overcloud-baremetal-deploy.yaml
+    dest: /home/stack/central/overcloud-baremetal-deploy.yaml
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Overcloud node provision
+  shell: source ~/stackrc && openstack overcloud node provision --stack central --network-config --output /home/stack/central/overcloud-baremetal-deployed.yaml /home/stack/central/overcloud-baremetal-deploy.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: overcloud_node_provision
+  failed_when: overcloud_node_provision.rc != 0
+
+- name: Overcloud node provision
+  shell: source ~/stackrc && openstack tripleo container image prepare -e ~/containers-prepare-parameter.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: container_image_prepare
+  failed_when: container_image_prepare.rc != 0
+
+- name: Copy files
+  copy:
+    src: "{{ item }}"
+    dest: "/home/stack/central/{{ item }}"
+    owner: stack
+    group: stack
+    mode: '0644'
+  loop:
+    - ironic-overrides.yaml
+    - site-name.yaml
+    - node-info.yaml
+    - ceph-config.yaml
+    - initial-ceph.conf
+    - glance.yaml
+
+- name: Deploy Ceph cluster
+  shell: |
+    source ~/stackrc
+    openstack overcloud ceph deploy \
+    --stack central \
+    --cluster central \
+    --config /home/stack/central/initial-ceph.conf \
+    -o /home/stack/central/deployed_ceph.yaml \
+    --network-data /home/stack/central/network_data.yaml \
+    --roles-data /home/stack/central/roles_data.yaml \
+    --container-image-prepare /home/stack/containers-prepare-parameter.yaml \
+    /home/stack/central/overcloud-baremetal-deployed.yaml \
+    --ntp-server 10.0.0.200
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: ceph_deploy
+  failed_when: ceph_deploy.rc != 0
+
+- name: Check /etc/pki/ca-trust/source/anchors/cm-local-ca.pem file exists
+  stat:
+    path: /etc/pki/ca-trust/source/anchors/cm-local-ca.pem
+  register: cm_local_ca_pem
+  failed_when: not cm_local_ca_pem.stat.exists
+
+- name: Get CA certificate content
+  command: awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' /etc/pki/ca-trust/source/anchors/cm-local-ca.pem
+  register: ca_cert_content
+  changed_when: false
+
+- name: Create inject-trust-anchor-hiera.yaml
+  copy:
+    content: |
+      parameter_defaults:
+        CAMap:
+          undercloud-ca:
+            content: |
+      {{ ca_cert_content.stdout_lines | map('regex_replace', '^(.*)$', '        \\1') | join('\n') }}
+    dest: /home/stack/central/inject-trust-anchor-hiera.yaml
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Copy overcloud_deploy.sh file
+  copy:
+    src: overcloud_deploy.sh
+    dest: /home/stack/central/overcloud_deploy.sh
+    owner: stack
+    group: stack
+    mode: '0755'
+
+- name: Run overcloud deployment script with stackrc environment
+  shell: source ~/stackrc && ./central/overcloud_deploy.sh
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: overcloud_deploy
+  failed_when: overcloud_deploy.rc != 0
+  

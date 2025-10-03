@@ -1,0 +1,9 @@
+parameter_defaults:
+  NovaComputeAvailabilityZone: central
+  ControllerExtraConfig:
+    nova::availability_zone::default_schedule_zone: central
+    horizon::keystone_multidomain_support: true
+    horizon::keystone_default_domain: 'Default'
+  NovaCrossAZAttach: false
+  CinderStorageAvailabilityZone: central
+  GlanceBackendID: central

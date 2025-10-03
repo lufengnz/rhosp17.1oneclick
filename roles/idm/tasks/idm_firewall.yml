@@ -1,0 +1,22 @@
+- name: Ensure firewalld is installed
+  dnf:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld is enabled and started
+  systemd:
+    name: firewalld
+    enabled: yes
+    state: started
+
+- name: Add permanent firewall services for IdM
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop: "{{ idm_firewall_services }}"
+
+- name: Reload firewalld to apply permanent changes
+  systemd:
+    name: firewalld
+    state: reloaded

@@ -1,0 +1,47 @@
+---
+# Configure kcli, SSH keys, and firewalld
+
+- name: Check if default network already exists in kcli
+  shell: kcli list network -o json | jq -r '.default'
+  register: network_check
+  changed_when: false
+  failed_when: false
+
+- name: Create default network in kcli
+  command: kcli create network default
+  when: network_check.stdout == "null" or network_check.stdout == ""
+  register: network_result
+  failed_when: network_result.rc != 0 and "already exists" not in network_result.stderr
+
+- name: Check if default storage pool already exists in kcli
+  shell: kcli list pool -o json | jq -r '.default'
+  register: pool_check
+  changed_when: false
+  failed_when: false
+
+- name: Create default storage pool in kcli
+  command: kcli create pool -p /var/lib/libvirt/images default
+  when: pool_check.stdout == "null" or pool_check.stdout == ""
+  register: pool_result
+  failed_when: pool_result.rc != 0 and "already exists" not in pool_result.stderr
+
+- name: Check if 'local' host already exists in kcli
+  shell: kcli list host -o json | jq -r '.[]'
+  register: host_check
+  changed_when: false
+  failed_when: false
+
+- name: Create local KVM host in kcli
+  command: kcli create host kvm -H 127.0.0.1 local
+  when: "'local' not in host_check.stdout_lines"
+  register: host_result
+  failed_when: host_result.rc != 0 and "already exists" not in host_result.stderr
+
+- name: Check if SSH key already exists
+  stat:
+    path: ~/.ssh/id_rsa
+  register: ssh_key
+
+- name: Generate SSH key if it doesn't exist
+  command: ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ""
+  when: not ssh_key.stat.exists

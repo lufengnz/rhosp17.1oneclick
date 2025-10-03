@@ -1,0 +1,21 @@
+- name: Create stack user
+  user:
+    name: stack
+    state: present
+    password: "{{ stack_password | password_hash('sha512') }}"
+
+- name: Configure sudoers for stack user
+  copy:
+    content: "stack ALL=(root) NOPASSWD:ALL\n"
+    dest: /etc/sudoers.d/stack
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+- name: Create required directories for stack user
+  file:
+    path: "/home/stack/{{ item }}"
+    state: directory
+    owner: stack
+    group: stack
+    mode: '0755'
+  loop: "{{ stack_directories }}"

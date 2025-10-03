@@ -1,0 +1,24 @@
+- name: Enable and start firewalld service
+  systemd:
+    name: firewalld
+    enabled: yes
+    state: started
+
+- name: Add permanent firewall services for IdM
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop: "{{ phy_firewall_services }}"
+
+- name: Add UDP ports 6230-6235 to libvirt zone permanently
+  firewalld:
+    port: 6230-6235/udp
+    zone: libvirt
+    permanent: yes
+    state: enabled
+
+- name: Reload firewalld to apply permanent changes
+  systemd:
+    name: firewalld
+    state: reloaded
