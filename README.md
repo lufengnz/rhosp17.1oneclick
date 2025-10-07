@@ -11,8 +11,5 @@ Preparation:
 4. Update your domain name in group_vars/all.yml;
 5. Create a registry service account following the steps in: https://access.redhat.com/articles/RegistryAuthentication#creating-registry-service-accounts-6
    update roles/director/vars/main.yml;
-
-
-
-5. install packages on physical hosts: 
+6. install packages on physical hosts: 
 # dnf install ansible-core rhel-system-roles -y

@@ -1,0 +1,80 @@
+- name: "Process node {{ node_item }}"
+  become: yes
+  become_user: stack
+  block:
+    - name: "Get node {{ node_item }} status"
+      shell: "source ~/stackrc && openstack baremetal node show {{ node_item }} -f json"
+      args:
+        executable: /bin/bash
+      register: node_status_json
+      changed_when: false
+
+    - name: "Set node_status fact for node {{ node_item }}"
+      set_fact:
+        node_status: "{{ node_status_json.stdout | from_json }}"
+
+    - name: "Reset node {{ node_item }} if it is in a bad state"
+      block:
+        - name: "Set maintenance on node {{ node_item }}"
+          shell: "source ~/stackrc && openstack baremetal node maintenance set {{ node_item }}"
+          args:
+            executable: /bin/bash
+          register: maintenance_set_result
+          until: maintenance_set_result.rc == 0
+          retries: 10
+          delay: 5
+          failed_when: false
+
+        - name: "Abort introspection on node {{ node_item }}"
+          shell: "source ~/stackrc && openstack baremetal introspection abort {{ node_item }}"
+          args:
+            executable: /bin/bash
+          when: node_status.provision_state == 'introspecting'
+          failed_when: false
+
+        - name: "Set node {{ node_item }} to manageable"
+          shell: "source ~/stackrc && openstack baremetal node manage {{ node_item }}"
+          args:
+            executable: /bin/bash
+          register: manage_result
+          until: manage_result.rc == 0
+          retries: 10
+          delay: 5
+          failed_when: false
+
+        - name: "Unset maintenance on node {{ node_item }}"
+          shell: "source ~/stackrc && openstack baremetal node maintenance unset {{ node_item }}"
+          args:
+            executable: /bin/bash
+          register: maintenance_unset_result
+          until: maintenance_unset_result.rc == 0
+          retries: 10
+          delay: 5
+          failed_when: false
+
+      when: node_status.provision_state not in ['manageable', 'available']
+
+    - name: "Introspect node {{ node_item }} if manageable"
+      shell: "source ~/stackrc && openstack baremetal node introspect {{ node_item }} --provide"
+      args:
+        executable: /bin/bash
+      when: node_status.provision_state == 'manageable' and not node_status.maintenance
+
+  rescue:
+    - name: "Fail if node {{ node_item }} could not be provisioned"
+      fail:
+        msg: "Failed to bring node {{ node_item }} to an available state."
+
+- name: "Wait for node {{ node_item }} to become available"
+  become: yes
+  become_user: stack
+  shell: "source ~/stackrc && openstack baremetal node show {{ node_item }} -f json"
+  args:
+    executable: /bin/bash
+  register: node_check_json
+  until:
+    - "(node_check_json.stdout | from_json).provision_state == 'available'"
+    - "not (node_check_json.stdout | from_json).maintenance"
+  retries: 20
+  delay: 30
+  changed_when: false

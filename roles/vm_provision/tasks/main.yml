@@ -1,6 +1,6 @@
 ---
 # tasks file for vm_provision
-- name: download images
+- name: download RHEL QEMU images
   ansible.builtin.include_tasks: rhel_images.yml  
 
 - name: VMs provisioning

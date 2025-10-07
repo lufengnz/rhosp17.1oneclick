@@ -1,0 +1,16 @@
+- name: Run kcli configuration
+  hosts: physical_hardware
+  roles:
+    - kcli
+    - virt_bridge
+    - vm_provision
+
+- name: Configure idm VM
+  hosts: idm
+  roles:
+    - idm
+
+- name: Configure director VM
+  hosts: director
+  roles:
+    - director

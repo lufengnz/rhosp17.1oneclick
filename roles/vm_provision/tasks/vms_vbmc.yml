@@ -9,18 +9,18 @@
     name: virtualbmc
     state: present
 
-- name: Verify vbmcd executable exists  
+- name: Verify vbmc executable exists  
   stat:
-    path: /usr/local/bin/vbmcd
-  register: vbmcd_executable
-  failed_when: not vbmcd_executable.stat.exists
+    path: /usr/local/bin/vbmc
+  register: vbmc_executable
+  failed_when: not vbmc_executable.stat.exists
 
 - name: Start vbmcd temporarily to initialize
   command: /usr/local/bin/vbmcd
 
 - name: Add VirtualBMC instances
   command: >
-    vbmc add {{ item.name }}
+    /usr/local/bin/vbmc add {{ item.name }}
     --port {{ item.port }}
     --username admin
     --password {{ vbmc_password | quote }}

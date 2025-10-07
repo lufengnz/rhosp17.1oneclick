@@ -1,7 +1,5 @@
 - name: Enable idm:DL1 module
   command: dnf module enable idm:DL1 -y
-  environment:
-    UMASK: '0022'
   register: enable_result
   changed_when: "'enabled' in enable_result.stdout"
 
@@ -10,15 +8,11 @@
     name: '*'
     state: latest
     update_cache: yes
-  environment:
-    UMASK: '0022'
 
 - name: Install idm:DL1/dns module
   dnf:
     name: '@idm:DL1/dns'
     state: present
-  environment:
-    UMASK: '0022'
 
 - name: Check if IPA is already configured
   command: ipactl status
@@ -29,7 +23,7 @@
 
 - name: Install IPA server with DNS
   command: >
-    ipa-server-install
+    umask 0022 && ipa-server-install
     --realm {{ domain_name | upper }}
     --ds-password {{ idm_password | quote }}
     --admin-password {{ idm_password | quote }}
@@ -37,9 +31,7 @@
     --setup-dns
     --auto-forwarders
     --auto-reverse
-  when: 
-    - ipa_status.rc == 3 
-    - "'IPA is not configured' in ipa_status.stderr"
+  when: ipa_status.rc == 3 and "'IPA is not configured' in ipa_status.stderr"
   register: ipa_install
   failed_when: ipa_install.rc != 0
   no_log: true

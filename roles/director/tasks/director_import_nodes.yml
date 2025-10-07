@@ -1,0 +1,139 @@
+- name: Ensure nodes.yaml file exists
+  stat:
+    path: /home/stack/central/nodes.yaml
+  register: nodes_file
+  failed_when: not nodes_file.stat.exists 
+
+- name: Ensure fencing.yaml file exists
+  stat:
+    path: /home/stack/central/fencing.yaml
+  register: fencing_file
+  failed_when: not fencing_file.stat.exists 
+
+- name: Import overcloud nodes
+  shell: source ~/stackrc && openstack overcloud node import ~/nodes.yaml
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: node_import
+  failed_when: node_import.rc != 0
+
+- name: Register baremetal nodes UUID
+  shell: openstack baremetal node list -c UUID -f value
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  register: node_uuid
+  changed_when: false
+
+- name: Process each node individually from manageable to available
+  become: yes
+  become_user: stack
+  args:
+    chdir: /home/stack
+    executable: /bin/bash
+  block:
+    - name: Check that node is in manageable state with retry
+      shell: source ~/stackrc && openstack baremetal node show {{ item }} -c provisioning_state -f value
+      register: node_state
+      until: node_state.stdout == "manageable"
+      retries: 20
+      delay: 10
+      changed_when: false
+
+    - name: Configure individual node
+      shell: source ~/stackrc && openstack overcloud node configure {{ item }}
+      register: configure_node_result
+      failed_when: configure_node_result.rc != 0
+
+    - name: Introspect node with proper reset on failure
+      block:
+        - name: Wait for node to be manageable and not in maintenance
+          shell: source ~/stackrc && openstack baremetal node show {{ item }} -c provisioning_state -c maintenance -f value
+          register: node_readiness
+          until: >-
+            node_readiness.stdout.split()[0] == "manageable" and
+            node_readiness.stdout.split()[1] == "False"
+          retries: 20
+          delay: 10
+          changed_when: false
+
+        - name: Run introspection (no retry on this task)
+          shell: source ~/stackrc && openstack baremetal node introspect {{ item }} --provide
+          register: introspect_result
+          failed_when: introspect_result.rc != 0
+
+        - name: Wait for node to become available
+          shell: source ~/stackrc && openstack baremetal node show {{ item }} -c provisioning_state -c maintenance -f value
+          register: node_availability
+          until: >-
+            node_availability.stdout.split()[0] == "available" and
+            node_availability.stdout.split()[1] == "False"
+          retries: 30
+          delay: 10
+          changed_when: false
+
+      rescue:
+        - name: Handle introspection failure - reset node state
+          block:
+            - name: Set maintenance mode to prevent further operations
+              shell: source ~/stackrc && openstack baremetal node maintenance set {{ item }}
+              register: maintenance_set_result
+              failed_when: false
+              retries: 10
+              delay: 30
+              until: maintenance_set_result.rc == 0
+
+            - name: Abort introspection if it was running
+              shell: source ~/stackrc && openstack baremetal introspection abort {{ item }}
+              register: abort_result
+              failed_when: false
+
+            - name: Manage the node to reset state
+              shell: source ~/stackrc && openstack baremetal node manage {{ item }}
+              register: manage_result
+              failed_when: false
+              retries: 10
+              delay: 30
+              until: manage_result.rc == 0
+
+            - name: Unset maintenance mode
+              shell: source ~/stackrc && openstack baremetal node maintenance unset {{ item }}
+              register: maintenance_unset_result
+              failed_when: false
+              retries: 10
+              delay: 30
+              until: maintenance_unset_result.rc == 0
+
+            - name: Wait for node to return to manageable state
+              shell: source ~/stackrc && openstack baremetal node show {{ item }} -c provisioning_state -f value
+              register: reset_node_state
+              until: reset_node_state.stdout == "manageable"
+              retries: 20
+              delay: 10
+              changed_when: false
+
+            - name: Retry introspection after reset
+              shell: source ~/stackrc && openstack baremetal node introspect {{ item }} --provide
+              register: retry_introspect_result
+              failed_when: retry_introspect_result.rc != 0
+
+            - name: Wait for node to become available after retry
+              shell: source ~/stackrc && openstack baremetal node show {{ item }} -c provisioning_state -c maintenance -f value
+              register: retry_availability
+              until: >-
+                retry_availability.stdout.split()[0] == "available" and
+                retry_availability.stdout.split()[1] == "False"
+              retries: 30
+              delay: 10
+              changed_when: false
+
+  loop: "{{ node_uuid.stdout_lines }}"
+  rescue:
+    - name: Handle individual node failure
+      fail:
+        msg: "Failed to process node {{ item }}"

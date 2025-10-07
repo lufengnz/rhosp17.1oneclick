@@ -5,6 +5,12 @@
     name: "{{ libvirt_packages }}"
     state: present
 
+- name: Ensure required groups exist
+  group:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ libvirt_groups }}"
+
 - name: Add root user to qemu and libvirt groups
   user:
     name: root

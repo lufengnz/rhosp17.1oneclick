@@ -9,7 +9,6 @@
     content: "stack ALL=(root) NOPASSWD:ALL\n"
     dest: /etc/sudoers.d/stack
     mode: '0440'
-    validate: 'visudo -cf %s'
 
 - name: Create required directories for stack user
   file:

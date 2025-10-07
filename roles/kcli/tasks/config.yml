@@ -41,7 +41,10 @@
   stat:
     path: ~/.ssh/id_rsa
   register: ssh_key
+  changed_when: false
 
 - name: Generate SSH key if it doesn't exist
   command: ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ""
   when: not ssh_key.stat.exists
+  register: keygen_result
+  failed_when: keygen_result.rc != 0

@@ -4,7 +4,7 @@
     enabled: yes
     state: started
 
-- name: Add permanent firewall services for IdM
+- name: Add permanent firewall services
   firewalld:
     service: "{{ item }}"
     permanent: yes

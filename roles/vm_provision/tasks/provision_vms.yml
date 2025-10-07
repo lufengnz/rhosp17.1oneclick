@@ -1,5 +1,5 @@
 - name: Check if kcli plans already exist
-  shell: kcli list plan -o json | jq -r '.[]'
+  shell: kcli list plan -o name
   register: plan_check
   changed_when: false
   failed_when: false
@@ -52,42 +52,38 @@
       command: kcli create plan -f /root/compute-plan.yml compute-plan
       no_log: true
 
-- name: Get director VM IP address
-  command: kcli list vm -P name=director -o json | jq -r '.[].ip // .[].ips[0]'
-  register: director_ip_result
-  changed_when: false
-  retries: 12
-  delay: 10
-  until: >
-    director_ip_result.stdout is defined and
-    director_ip_result.stdout != "" and
-    director_ip_result.stdout != "null" and
-    director_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")
+- name: Start VMs and update /etc/hosts
+  loop:
+    - director
+    - idm
+  block:
+    - name: Check {{ item }} VM running status
+      shell: kcli show vm {{ item }} -f status
+      register: vm_status
+      changed_when: false
 
-- name: Append director IP and hostname to /etc/hosts
-  lineinfile:
-    path: /etc/hosts
-    line: "{{ director_ip_result.stdout }} director"
-    state: present
-    backup: yes
-  when: director_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")
+    - name: Start {{ item }} VM if not running
+      when: vm_status.stdout != "status: up"
+      command: kcli start vm {{ item }}
+      register: start_vm_result
+      failed_when: start_vm_result.rc != 0
 
-- name: Get idm VM IP address
-  command: kcli list vm -P name=idm -o json | jq -r '.[].ip // .[].ips[0]'
-  register: idm_ip_result
-  changed_when: false
-  retries: 12
-  delay: 10
-  until: >
-    idm_ip_result.stdout is defined and
-    idm_ip_result.stdout != "" and
-    idm_ip_result.stdout != "null" and
-    idm_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")
+    - name: Get {{ item }} VM IP address
+      command: kcli show vm {{ item }} -f ip
+      register: vm_ip_result
+      changed_when: false
+      retries: 12
+      delay: 10
+      until: >
+        vm_ip_result.stdout is defined and
+        vm_ip_result.stdout != "" and
+        vm_ip_result.stdout != "null" and
+        vm_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")
 
-- name: Append idm IP and hostname to /etc/hosts
-  lineinfile:
-    path: /etc/hosts
-    line: "{{ idm_ip_result.stdout }} idm"
-    state: present
-    backup: yes
-  when: idm_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")
+    - name: Append {{ item }} IP and hostname to /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ vm_ip_result.stdout }} {{ item }}"
+        state: present
+        backup: yes
+      when: vm_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")

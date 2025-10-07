@@ -8,9 +8,7 @@
 
 - name: Create custom-undercloud-params.yaml
   copy:
-    content: |
-      parameter_defaults:
-        Debug: True
+    src: custom-undercloud-params.yaml
     dest: /home/stack/custom-undercloud-params.yaml
     owner: stack
     group: stack

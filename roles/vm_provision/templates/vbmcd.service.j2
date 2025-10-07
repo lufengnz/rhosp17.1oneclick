@@ -1,0 +1,27 @@
+[Unit]
+After=libvirtd.service
+After=syslog.target
+After=network.target
+Description=vbmc service
+
+[Service]
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/usr/local/bin/vbmcd --foreground
+{% for instance in vbmc_instances %}
+ExecStartPost=/usr/local/bin/vbmc start {{ instance.name }}
+{% endfor %}
+Group=root
+PrivateDevices=False
+PrivateNetwork=False
+PrivateTmp=False
+PrivateUsers=False
+Restart=on-failure
+RestartSec=2
+Slice=vbmc.slice
+TasksAccounting=True
+TimeoutSec=120
+Type=simple
+User=root
+
+[Install]
+WantedBy=multi-user.target
