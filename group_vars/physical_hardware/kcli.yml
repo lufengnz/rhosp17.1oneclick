@@ -1,0 +1,16 @@
+---
+# vars file for kcli
+libvirt_packages:
+  - libvirt
+  - libvirt-daemon-driver-qemu
+  - qemu-kvm
+  - tar
+  - virt-viewer
+
+libvirt_groups:
+  - qemu
+  - libvirt
+
+phy_firewall_services:
+  - ssh
+  - libvirt

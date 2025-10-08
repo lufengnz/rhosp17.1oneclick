@@ -1,0 +1,7 @@
+---
+# vars file for idm
+idm_firewall_services:
+  - freeipa-4
+  - dns
+  - ssh
+  - ntp

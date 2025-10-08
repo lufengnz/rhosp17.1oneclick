@@ -1,0 +1,23 @@
+---
+# vars file for director
+enabled_repositories:
+  - rhel-9-for-x86_64-baseos-eus-rpms
+  - rhel-9-for-x86_64-appstream-eus-rpms
+  - rhel-9-for-x86_64-highavailability-eus-rpms
+  - openstack-17.1-for-rhel-9-x86_64-rpms
+  - fast-datapath-for-rhel-9-x86_64-rpms
+
+stack_password: "@WSX3edc"
+
+stack_directories:
+  - images
+  - templates
+  - central
+
+registry_sa_username: "your-service-account-username"
+registry_sa_password: "your-service-account-password"
+
+ipa_client_packages:
+  - python3-ipalib
+  - python3-ipaclient
+  - krb5-devel
