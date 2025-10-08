@@ -1,5 +1,5 @@
 - name: Run undercloud installation with real-time output
-  command: openstack undercloud install
+  ansible.builtin.command: openstack undercloud install
   become: yes
   become_user: stack
   args:

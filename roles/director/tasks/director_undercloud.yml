@@ -1,5 +1,5 @@
 - name: Deploy containers-prepare-parameter.yaml template
-  template:
+  ansible.builtin.template:
     src: containers-prepare-parameter.yaml.j2
     dest: /home/stack/containers-prepare-parameter.yaml
     owner: stack
@@ -7,7 +7,7 @@
     mode: '0644'
 
 - name: Create custom-undercloud-params.yaml
-  copy:
+  ansible.builtin.copy:
     src: custom-undercloud-params.yaml
     dest: /home/stack/custom-undercloud-params.yaml
     owner: stack
@@ -15,7 +15,7 @@
     mode: '0644'
 
 - name: Deploy undercloud.conf template
-  template:
+  ansible.builtin.template:
     src: undercloud.conf.j2
     dest: /home/stack/undercloud.conf
     owner: stack

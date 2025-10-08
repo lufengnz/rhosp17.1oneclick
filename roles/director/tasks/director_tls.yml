@@ -1,11 +1,11 @@
 - name: Install IPA client packages
-  dnf:
+  ansible.builtin.dnf:
     name: "{{ ipa_client_packages }}"
     state: present
     update_cache: yes
 
 - name: Deploy iparc environment file from template
-  template:
+  ansible.builtin.template:
     src: iparc.j2
     dest: /home/stack/iparc
     owner: stack
@@ -13,7 +13,7 @@
     mode: '0644'
 
 - name: Run undercloud IPA installation playbook
-  command: >
+  ansible.builtin.command: >
     source ~/iparc && ansible-playbook
     --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
     /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
@@ -27,7 +27,7 @@
   no_log: true
 
 - name: Create TLS parameters file
-  template:
+  ansible.builtin.template:
     src: tls-parameters.yaml.j2
     dest: /home/stack/central/tls-parameters.yaml
     owner: stack

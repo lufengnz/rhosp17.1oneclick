@@ -1,24 +1,22 @@
 - name: Enable and start firewalld service
-  systemd:
+  ansible.builtin.systemd:
     name: firewalld
     enabled: yes
     state: started
 
 - name: Add permanent firewall services
-  firewalld:
+  ansible.posix.firewalld:
     service: "{{ item }}"
     permanent: yes
     state: enabled
   loop: "{{ phy_firewall_services }}"
+  notify: Reload firewalld to apply permanent changes
 
 - name: Add UDP ports 6230-6235 to libvirt zone permanently
-  firewalld:
+  ansible.posix.firewalld:
     port: 6230-6235/udp
     zone: libvirt
     permanent: yes
     state: enabled
+  notify: Reload firewalld to apply permanent changes
 
-- name: Reload firewalld to apply permanent changes
-  systemd:
-    name: firewalld
-    state: reloaded

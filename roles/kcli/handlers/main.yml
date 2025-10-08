@@ -1,2 +1,10 @@
 ---
 # handlers file for kcli
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Reload firewalld to apply permanent changes
+  systemd:
+    name: firewalld
+    state: reloaded

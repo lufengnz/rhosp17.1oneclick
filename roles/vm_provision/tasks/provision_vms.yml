@@ -1,56 +1,27 @@
 - name: Check if kcli plans already exist
-  shell: kcli list plan -o name
+  ansible.builtin.shell: kcli list plan -o name
   register: plan_check
   changed_when: false
   failed_when: false
 
-- name: Deploy director VM plan
-  when: "'director-plan' not in plan_check.stdout_lines"
+- name: Deploy VM plans
+  when: "item not in plan_check.stdout_lines"
   block:
-    - name: Render director plan
-      template:
-        src: plan-director.yml.j2
-        dest: /root/director-plan.yml
+    - name: Render {{ item }} plan
+      ansible.builtin.template:
+        src: "plan-{{ item }}.yml.j2"
+        dest: "/root/{{ item }}.yml"
         mode: '0600'
-    - name: Create director plan
-      command: kcli create plan -f /root/director-plan.yml director-plan
+
+    - name: Create {{ item }} plan
+      ansible.builtin.command: "kcli create plan -f /root/{{ item }}.yml {{ item }}"
       no_log: true
 
-- name: Deploy idm VM plan
-  when: "'idm-plan' not in plan_check.stdout_lines"
-  block:
-    - name: Render idm plan
-      template:
-        src: plan-idm.yml.j2
-        dest: /root/idm-plan.yml
-        mode: '0600'
-    - name: Create idm plan
-      command: kcli create plan -f /root/idm-plan.yml idm-plan
-      no_log: true
-
-- name: Deploy controllers VM plan
-  when: "'controllers-plan' not in plan_check.stdout_lines"
-  block:
-    - name: Render controllers plan
-      template:
-        src: plan-controllers.yml.j2
-        dest: /root/controllers-plan.yml
-        mode: '0600'
-    - name: Create controllers plan
-      command: kcli create plan -f /root/controllers-plan.yml controllers-plan
-      no_log: true
-
-- name: Deploy compute VM plan
-  when: "'compute-plan' not in plan_check.stdout_lines"
-  block:
-    - name: Render compute plan
-      template:
-        src: plan-compute.yml.j2
-        dest: /root/compute-plan.yml
-        mode: '0600'
-    - name: Create compute plan
-      command: kcli create plan -f /root/compute-plan.yml compute-plan
-      no_log: true
+  loop:
+    - director-plan
+    - idm-plan
+    - controllers-plan
+    - compute-plan
 
 - name: Start VMs and update /etc/hosts
   loop:
@@ -58,18 +29,18 @@
     - idm
   block:
     - name: Check {{ item }} VM running status
-      shell: kcli show vm {{ item }} -f status
+      ansible.builtin.shell: kcli show vm {{ item }} -f status
       register: vm_status
       changed_when: false
 
     - name: Start {{ item }} VM if not running
       when: vm_status.stdout != "status: up"
-      command: kcli start vm {{ item }}
+      ansible.builtin.command: kcli start vm {{ item }}
       register: start_vm_result
       failed_when: start_vm_result.rc != 0
 
     - name: Get {{ item }} VM IP address
-      command: kcli show vm {{ item }} -f ip
+      ansible.builtin.command: kcli show vm {{ item }} -f ip
       register: vm_ip_result
       changed_when: false
       retries: 12
@@ -81,7 +52,7 @@
         vm_ip_result.stdout is match("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$")
 
     - name: Append {{ item }} IP and hostname to /etc/hosts
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/hosts
         line: "{{ vm_ip_result.stdout }} {{ item }}"
         state: present

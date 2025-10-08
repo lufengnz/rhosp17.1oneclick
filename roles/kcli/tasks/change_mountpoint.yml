@@ -1,51 +1,48 @@
 ---
 # Change mountpoint from /home to /var/lib/libvirt/images
 - name: Check if fstab needs updating
-  command: grep -q '/home' /etc/fstab
+  ansible.builtin.command: grep -q '/home' /etc/fstab
   register: fstab_needs_update
   failed_when: false
   changed_when: false
 
 - name: Update fstab to change mountpoint from /home to /var/lib/libvirt/images
-  replace:
+  ansible.builtin.replace:
     path: /etc/fstab
     regexp: '\/home'
     replace: '/var/lib/libvirt/images'
   when: fstab_needs_update.rc == 0
+  notify: Reload systemd daemon
 
 - name: Unmount /home directory
-  command: umount /home
+  ansible.builtin.command: umount /home
   ignore_errors: yes
 
-- name: Reload systemd daemon
-  systemd:
-    daemon_reload: yes
-
 - name: Create /var/lib/libvirt/images directory
-  file:
+  ansible.builtin.file:
     path: /var/lib/libvirt/images
     state: directory
     mode: '0755'
 
 - name: Check if /var/lib/libvirt/images is already mounted
-  command: findmnt /var/lib/libvirt/images
+  ansible.builtin.command: findmnt /var/lib/libvirt/images
   register: mount_check
   failed_when: false
   changed_when: false
 
 - name: Mount all filesystems from fstab if needed
-  command: mount -a
+  ansible.builtin.command: mount -a
   when: mount_check.rc != 0
   register: mount_result
   failed_when: mount_result.rc != 0
 
 - name: Verify /var/lib/libvirt/images is mounted
-  command: findmnt /var/lib/libvirt/images
+  ansible.builtin.command: findmnt /var/lib/libvirt/images
   register: final_mount_check
   failed_when: final_mount_check.rc != 0
 
 - name: Set ACL for root user on /var/lib/libvirt/images
-  acl:
+  ansible.posix.acl:
     path: /var/lib/libvirt/images
     entity: root
     etype: user

@@ -1,17 +1,17 @@
 - name: Create stack user
-  user:
+  ansible.builtin.user:
     name: stack
     state: present
     password: "{{ stack_password | password_hash('sha512') }}"
 
 - name: Configure sudoers for stack user
-  copy:
+  ansible.builtin.copy:
     content: "stack ALL=(root) NOPASSWD:ALL\n"
     dest: /etc/sudoers.d/stack
     mode: '0440'
 
 - name: Create required directories for stack user
-  file:
+  ansible.builtin.file:
     path: "/home/stack/{{ item }}"
     state: directory
     owner: stack

@@ -1,28 +1,28 @@
 - name: Enable idm:DL1 module
-  command: dnf module enable idm:DL1 -y
+  ansible.builtin.command: dnf module enable idm:DL1 -y
   register: enable_result
   changed_when: "'enabled' in enable_result.stdout"
 
 - name: Run dnf distro-sync
-  dnf:
+  ansible.builtin.dnf:
     name: '*'
     state: latest
     update_cache: yes
 
 - name: Install idm:DL1/dns module
-  dnf:
+  ansible.builtin.dnf:
     name: '@idm:DL1/dns'
     state: present
 
 - name: Check if IPA is already configured
-  command: ipactl status
+  ansible.builtin.command: ipactl status
   register: ipa_status
   ignore_errors: true
   changed_when: false
   check_mode: false
 
 - name: Install IPA server with DNS
-  command: >
+  ansible.builtin.command: >
     umask 0022 && ipa-server-install
     --realm {{ domain_name | upper }}
     --ds-password {{ idm_password | quote }}

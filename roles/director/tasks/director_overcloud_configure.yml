@@ -1,5 +1,5 @@
 - name: Set root device size for controller nodes
-  shell: source ~/stackrc && openstack baremetal node set --property root_device='{"size": "100"}' {{ item }}
+  ansible.builtin.shell: source ~/stackrc && openstack baremetal node set --property root_device='{"size": "100"}' {{ item }}
   become: yes
   become_user: stack
   args:
@@ -10,7 +10,7 @@
   failed_when: root_device_result.rc != 0
 
 - name: Update nodes properties
-  shell: |
+  ansible.builtin.shell: |
     source ~/stackrc
     openstack baremetal node list -f value -c UUID | while read NODE; do
       openstack baremetal node set --property capabilities="boot_mode:bios,$(openstack baremetal node show $NODE -f json -c properties | jq -r .properties.capabilities | sed 's/boot_mode:[^,]*,//g')" $NODE
@@ -24,7 +24,7 @@
   failed_when: update_property_result.rc != 0
 
 - name: Copy overcloud-baremetal-deploy.yaml file
-  copy:
+  ansible.builtin.copy:
     src: overcloud-baremetal-deploy.yaml
     dest: /home/stack/central/overcloud-baremetal-deploy.yaml
     owner: stack
@@ -32,7 +32,7 @@
     mode: '0644'
 
 - name: Overcloud node provision
-  shell: source ~/stackrc && openstack overcloud node provision --stack central --network-config --output /home/stack/central/overcloud-baremetal-deployed.yaml /home/stack/central/overcloud-baremetal-deploy.yaml
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud node provision --stack central --network-config --output /home/stack/central/overcloud-baremetal-deployed.yaml /home/stack/central/overcloud-baremetal-deploy.yaml
   become: yes
   become_user: stack
   args:
@@ -42,7 +42,7 @@
   failed_when: overcloud_node_provision.rc != 0
 
 - name: Overcloud node provision
-  shell: source ~/stackrc && openstack tripleo container image prepare -e ~/containers-prepare-parameter.yaml
+  ansible.builtin.shell: source ~/stackrc && openstack tripleo container image prepare -e ~/containers-prepare-parameter.yaml
   become: yes
   become_user: stack
   args:
@@ -52,7 +52,7 @@
   failed_when: container_image_prepare.rc != 0
 
 - name: Copy files
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "/home/stack/central/{{ item }}"
     owner: stack
@@ -67,7 +67,7 @@
     - glance.yaml
 
 - name: Deploy Ceph cluster
-  shell: |
+  ansible.builtin.shell: |
     source ~/stackrc
     openstack overcloud ceph deploy \
     --stack central \
@@ -88,18 +88,18 @@
   failed_when: ceph_deploy.rc != 0
 
 - name: Check /etc/pki/ca-trust/source/anchors/cm-local-ca.pem file exists
-  stat:
+  ansible.builtin.stat:
     path: /etc/pki/ca-trust/source/anchors/cm-local-ca.pem
   register: cm_local_ca_pem
   failed_when: not cm_local_ca_pem.stat.exists
 
 - name: Get CA certificate content
-  command: awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' /etc/pki/ca-trust/source/anchors/cm-local-ca.pem
+  ansible.builtin.command: awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' /etc/pki/ca-trust/source/anchors/cm-local-ca.pem
   register: ca_cert_content
   changed_when: false
 
 - name: Create inject-trust-anchor-hiera.yaml
-  copy:
+  ansible.builtin.copy:
     content: |
       parameter_defaults:
         CAMap:
@@ -112,7 +112,7 @@
     mode: '0644'
 
 - name: Copy overcloud_deploy.sh file
-  copy:
+  ansible.builtin.copy:
     src: overcloud_deploy.sh
     dest: /home/stack/central/overcloud_deploy.sh
     owner: stack
@@ -120,7 +120,7 @@
     mode: '0755'
 
 - name: Run overcloud deployment script with stackrc environment
-  shell: source ~/stackrc && ./central/overcloud_deploy.sh
+  ansible.builtin.shell: source ~/stackrc && ./central/overcloud_deploy.sh
   become: yes
   become_user: stack
   args:

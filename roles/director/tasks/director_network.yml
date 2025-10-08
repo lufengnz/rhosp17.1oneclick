@@ -1,5 +1,5 @@
 - name: Install RHOSP director images
-  dnf:
+  ansible.builtin.dnf:
     name:
       - rhosp-director-images-uefi-x86_64
       - rhosp-director-images-ipa-x86_64
@@ -7,7 +7,7 @@
     update_cache: yes
 
 - name: Extract RHOSP director images
-  unarchive:
+  ansible.builtin.unarchive:
     src: "{{ item }}"
     dest: /home/stack/images
   loop:
@@ -17,7 +17,7 @@
   become_user: stack
 
 - name: Upload overcloud images to Glance
-  shell: source ~/stackrc && openstack overcloud image upload --image-path /home/stack/images/
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud image upload --image-path /home/stack/images/
   become: yes
   become_user: stack
   args:
@@ -27,7 +27,7 @@
   failed_when: image_upload.rc != 0
 
 - name: Generate roles_data.yaml for Controller and Compute roles
-  shell: source ~/stackrc && openstack overcloud role generate -o /home/stack/central/roles_data.yaml Controller Compute
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud role generate -o /home/stack/central/roles_data.yaml Controller Compute
   become: yes
   become_user: stack
   args:
@@ -37,7 +37,7 @@
   failed_when: role_generate.rc != 0
 
 - name: Add CephOSD service to roles_data.yaml after CephRgw
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /home/stack/central/roles_data.yaml
     insertafter: '^\s*- OS::TripleO::Services::CephRgw'
     line: "    - OS::TripleO::Services::CephOSD"
@@ -45,7 +45,7 @@
     state: present
 
 - name: Copy default network isolation template
-  copy:
+  ansible.builtin.copy:
     src: /usr/share/openstack-tripleo-heat-templates/network-data-samples/default-network-isolation.yaml
     dest: /home/stack/central/network_data.yaml
     remote_src: yes
@@ -54,7 +54,7 @@
     mode: '0644'
 
 - name: Copy default network isolation template
-  copy:
+  ansible.builtin.copy:
     src: /usr/share/openstack-tripleo-heat-templates/network-data-samples/vip-data-default-network-isolation.yaml
     dest: /home/stack/central/vip_data.yaml
     remote_src: yes
@@ -63,28 +63,28 @@
     mode: '0644'
 
 - name: Update gateway_ip in network_data.yaml
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /home/stack/central/network_data.yaml
     regexp: '^      gateway_ip: 10.0.0.1$'
     line: '      gateway_ip: 10.0.0.254'
     backup: yes
 
 - name: Update end IP in network_data.yaml
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /home/stack/central/network_data.yaml
     regexp: '^          end: 10.0.0.250$'
     line: '          end: 10.0.0.100'
     backup: yes
 
 - name: Remove vlan: 10 line from network_data.yaml
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /home/stack/central/network_data.yaml
     regexp: '^      vlan: 10$'
     state: absent
     backup: yes
 
 - name: Provision overcloud networks
-  shell: source ~/stackrc && openstack overcloud network provision --output /home/stack/central/overcloud-networks-deployed.yaml /home/stack/central/network_data.yaml
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud network provision --output /home/stack/central/overcloud-networks-deployed.yaml /home/stack/central/network_data.yaml
   become: yes
   become_user: stack
   args:
@@ -94,13 +94,13 @@
   failed_when: network_provision.rc != 0
 
 - name: Ensure output file overcloud-networks-deployed.yaml exists
-  stat:
+  ansible.builtin.stat:
     path: /home/stack/central/overcloud-networks-deployed.yaml
   register: networks_deployed
   failed_when: not networks_deployed.stat.exists 
 
 - name: Provision overcloud networks vip
-  shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml
   become: yes
   become_user: stack
   args:
@@ -110,13 +110,13 @@
   failed_when: network_provision_vip.rc != 0
 
 - name: Ensure output file overcloud-vip-deployed.yaml exists
-  stat:
+  ansible.builtin.stat:
     path: /home/stack/central/overcloud-vip-deployed.yaml
   register: vip_deployed
   failed_when: not vip_deployed.stat.exists 
 
 - name: Deploy two_interfaces.j2 file
-  copy:
+  ansible.builtin.copy:
     src: two_interfaces.j2
     dest: /home/stack/central/two_interfaces.j2
     owner: stack

@@ -1,37 +1,37 @@
 ---
 # Install libvirt, KVM, and kcli
 - name: Install libvirt and KVM packages
-  dnf:
+  ansible.builtin.dnf:
     name: "{{ libvirt_packages }}"
     state: present
 
 - name: Ensure required groups exist
-  group:
+  ansible.builtin.group:
     name: "{{ item }}"
     state: present
   loop: "{{ libvirt_groups }}"
 
 - name: Add root user to qemu and libvirt groups
-  user:
+  ansible.builtin.user:
     name: root
     groups: "{{ libvirt_groups }}"
     append: yes
 
 - name: Reset connection to ensure new group membership is applied
-  meta: reset_connection
+  ansible.builtin.meta: reset_connection
 
 - name: Enable and start libvirtd service
-  systemd:
+  ansible.builtin.systemd:
     name: libvirtd
     enabled: yes
     state: started
 
 - name: Enable karmab/kcli COPR repository
-  command: dnf -y copr enable karmab/kcli
+  ansible.builtin.command: dnf -y copr enable karmab/kcli
   args:
     creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:karmab:kcli.repo
 
 - name: Install kcli package
-  dnf:
+  ansible.builtin.dnf:
     name: kcli
     state: present

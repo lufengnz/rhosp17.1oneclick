@@ -1,25 +1,25 @@
 - name: Install python3-pip package
-  dnf:
+  ansible.builtin.dnf:
     name: python3-pip
     state: present
     update_cache: yes
 
 - name: Install virtualbmc via pip
-  pip:
+  ansible.builtin.pip:
     name: virtualbmc
     state: present
 
 - name: Verify vbmc executable exists  
-  stat:
+  ansible.builtin.stat:
     path: /usr/local/bin/vbmc
   register: vbmc_executable
   failed_when: not vbmc_executable.stat.exists
 
 - name: Start vbmcd temporarily to initialize
-  command: /usr/local/bin/vbmcd
+  ansible.builtin.command: /usr/local/bin/vbmcd
 
 - name: Add VirtualBMC instances
-  command: >
+  ansible.builtin.command: >
     /usr/local/bin/vbmc add {{ item.name }}
     --port {{ item.port }}
     --username admin
@@ -29,44 +29,44 @@
   failed_when: vbmc_add.rc != 0 and "'already exists' not in vbmc_add.stderr"
 
 - name: Stop any running vbmcd processes
-  command: pkill vbmcd
+  ansible.builtin.command: pkill vbmcd
   ignore_errors: yes
   changed_when: false
 
 - name: Create vbmcd systemd service file
-  template:
+  ansible.builtin.template:
     src: vbmcd.service.j2
     dest: /etc/systemd/system/vbmcd.service
     mode: '0644'
 
 - name: Reload systemd and enable vbmcd service
-  systemd:
+  ansible.builtin.systemd:
     name: vbmcd
     enabled: yes
     state: started
     daemon_reload: yes
 
 - name: Extract MAC addresses for all VBMC instances
-  shell: |
+  ansible.builtin.shell: |
     virsh dumpxml {{ item.name }} | xmllint --xpath "//interface/source[@network='br-provisioning']/parent::*/mac/@address" - 2>/dev/null | cut -d'"' -f2
   loop: "{{ vbmc_instances }}"
   register: mac_addresses
   changed_when: false
 
 - name: Create nodes.yaml dynamically
-  template:
+  ansible.builtin.template:
     src: nodes.yaml.j2
     dest: /root/nodes.yaml
     mode: '0644'
 
 - name: Create fencing.yaml dynamically
-  template:
+  ansible.builtin.template:
     src: fencing.yaml.j2
     dest: /root/fencing.yaml
     mode: '0644'
 
 - name: Copy files to director
-  copy:
+  ansible.builtin.copy:
     src: /root/{{ item }}
     dest: /home/stack/central/{{ item }}
     owner: stack
