@@ -8,6 +8,6 @@ nodes:
     pm_type: "ipmi"
     pm_user: "admin"
     pm_password: "{{ vbmc_password }}"
-    pm_addr: "{{ vbmc_ip }}"
+    pm_addr: "{{ (libvirt_networks | selectattr('name', 'equalto', 'br-provisioning') | first).ip_address }}"
     pm_port: "{{ result.item.port }}"
 {% endfor %}

@@ -24,22 +24,9 @@
     state: directory
     mode: '0755'
 
-- name: Check if /var/lib/libvirt/images is already mounted
-  ansible.builtin.command: findmnt /var/lib/libvirt/images
-  register: mount_check
-  failed_when: false
-  changed_when: false
-
 - name: Mount all filesystems from fstab if needed
   ansible.builtin.command: mount -a
-  when: mount_check.rc != 0
-  register: mount_result
-  failed_when: mount_result.rc != 0
-
-- name: Verify /var/lib/libvirt/images is mounted
-  ansible.builtin.command: findmnt /var/lib/libvirt/images
-  register: final_mount_check
-  failed_when: final_mount_check.rc != 0
+  notify: Verify /var/lib/libvirt/images is mounted
 
 - name: Set ACL for root user on /var/lib/libvirt/images
   ansible.posix.acl:

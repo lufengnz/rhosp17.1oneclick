@@ -24,7 +24,7 @@
     --port {{ item.port }}
     --username admin
     --password {{ vbmc_password | quote }}
-  loop: "{{ vbmc_instances }}"
+  loop: "{{ vbmc_controller_instances | union(vbmc_compute_instances) }}"
   register: vbmc_add
   failed_when: vbmc_add.rc != 0 and "'already exists' not in vbmc_add.stderr"
 
@@ -49,7 +49,7 @@
 - name: Extract MAC addresses for all VBMC instances
   ansible.builtin.shell: |
     virsh dumpxml {{ item.name }} | xmllint --xpath "//interface/source[@network='br-provisioning']/parent::*/mac/@address" - 2>/dev/null | cut -d'"' -f2
-  loop: "{{ vbmc_instances }}"
+  loop: "{{ vbmc_controller_instances | union(vbmc_compute_instances) }}"
   register: mac_addresses
   changed_when: false
 

@@ -11,15 +11,8 @@ rhel_images:
     name: rhel9
     url: "https://example.com/rhel9.qcow2"
 
-vbmc_instances:
-  - name: controller0
-    port: 6230
-  - name: controller1
-    port: 6231
-  - name: controller2
-    port: 6232
-  - name: compute0
-    port: 6233
-
 vbmc_password: "redhat"
-vbmc_ip: "192.168.24.254"
+
+disk_size_root: 100
+disk_size_ceph: 50
+num_ceph_disks: 3

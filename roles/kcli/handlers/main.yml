@@ -8,3 +8,15 @@
   systemd:
     name: firewalld
     state: reloaded
+
+- name: Verify /var/lib/libvirt/images is mounted
+  block:
+    - name: Verify /var/lib/libvirt/images mount
+      ansible.builtin.command: findmnt /var/lib/libvirt/images
+      register: final_mount_check
+
+    - name: Verify /var/lib/libvirt/images mount is successful
+      ansible.builtin.assert:
+        that: final_mount_check.rc == 0
+        fail_msg: "/var/lib/libvirt/images mount failed"
+        success_msg: "/var/lib/libvirt/images is mounted successfully"

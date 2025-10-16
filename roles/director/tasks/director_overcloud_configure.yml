@@ -5,7 +5,7 @@
   args:
     chdir: /home/stack
     executable: /bin/bash
-  loop: "{{ controller_names }}"
+  loop: "{{ vbmc_controller_instances | map(attribute='name') | list }}"
   register: root_device_result
   failed_when: root_device_result.rc != 0
 

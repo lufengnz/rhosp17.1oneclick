@@ -8,9 +8,6 @@ vms:
     memory: 8192
     numcpus: 8
     disks:
-      - size: 100
+      - size: {{ disk_size_root }}
         interface: "sata"
-    nets:
-      - "default"
-      - "br-provisioning"
-      - "br-external"
+    nets: "{{ libvirt_networks | map(attribute='name') | union(['default']) | list }}"

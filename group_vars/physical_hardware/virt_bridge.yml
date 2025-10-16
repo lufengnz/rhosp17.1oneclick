@@ -1,9 +1,0 @@
----
-# vars file for virt_bridge
-libvirt_networks:
-  - name: br-provisioning
-    ip_address: 192.168.24.254
-    netmask: 255.255.255.0
-  - name: br-external
-    ip_address: 10.0.0.254
-    netmask: 255.255.255.0

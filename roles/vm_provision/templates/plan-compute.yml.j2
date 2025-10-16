@@ -8,8 +8,6 @@ vms:
     memory: 16384
     numcpus: 4
     disks:
-      - size: 100
+      - size: {{ disk_size_root }}
         interface: "sata"
-    nets:
-      - "br-provisioning"
-      - "br-external"
+    nets: "{{ libvirt_networks | map(attribute='name') | list }}"

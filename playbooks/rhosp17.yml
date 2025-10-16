@@ -1,16 +1,22 @@
-- name: Run kcli configuration
+- name: Configure on physical hardware
+  gather_facts: true
   hosts: physical_hardware
   roles:
     - kcli
     - virt_bridge
     - vm_provision
+  tags: preconfig
 
-- name: Configure idm VM
+- name: Configure idm VM 
+  gather_facts: false
   hosts: idm
   roles:
     - idm
+  tags: idm
 
-- name: Configure director VM
+- name: Configure director VM 
+  gather_facts: false
   hosts: director
   roles:
     - director
+  tags: director

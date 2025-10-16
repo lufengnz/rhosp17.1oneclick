@@ -1,19 +1,15 @@
 - name: Check existing kcli images
-  shell: kcli list image -o name
+  ansible.builtin.command: kcli list image -o nameW
   register: image_check
   changed_when: false
   failed_when: false
 
 - name: Download RHEL8 image if missing
   when: "'/var/lib/libvirt/images/rhel8' not in image_check.stdout_lines"
-  block:
-    - name: Download RHEL8 image
-      command: kcli download image -P url={{ rhel_images.rhel8.url }} {{ rhel_images.rhel8.name }}
-      no_log: true
+  ansible.builtin.command: kcli download image -P url={{ rhel_images.rhel8.url }} {{ rhel_images.rhel8.name }}
+    no_log: true
 
 - name: Download RHEL9 image if missing
   when: "'/var/lib/libvirt/images/rhel9' not in image_check.stdout_lines"
-  block:
-    - name: Download RHEL9 image
-      command: kcli download image -P url={{ rhel_images.rhel9.url }} {{ rhel_images.rhel9.name }}
-      no_log: true
+  ansible.builtin.command: kcli download image -P url={{ rhel_images.rhel9.url }} {{ rhel_images.rhel9.name }}
+    no_log: true

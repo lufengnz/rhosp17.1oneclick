@@ -6,7 +6,7 @@ parameter_defaults:
       - agent: fence_ipmilan
         host_mac: "{{ result.stdout }}"
         params:
-          ipaddr: "{{ vbmc_ip }}"
+          ipaddr: "{{ (libvirt_networks | selectattr('name', 'equalto', 'br-provisioning') | first).ip_address }}"
           ipport: '{{ result.item.port }}'
           lanplus: true
           login: admin
