@@ -1,0 +1,9 @@
+- name: Render {{ plan_name }} plan
+  ansible.builtin.template:
+    src: "plan-{{ plan_name }}.yml.j2"
+    dest: "/root/{{ plan_name }}.yml"
+    mode: '0600'
+
+- name: Create {{ plan_name }} plan
+  ansible.builtin.command: "kcli create plan -f /root/{{ plan_name }}.yml {{ plan_name }}"
+  no_log: true

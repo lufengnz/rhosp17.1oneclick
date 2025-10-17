@@ -6,17 +6,9 @@
 
 - name: Deploy VM plans
   when: "item not in plan_check.stdout_lines"
-  block:
-    - name: Render {{ item }} plan
-      ansible.builtin.template:
-        src: "plan-{{ item }}.yml.j2"
-        dest: "/root/{{ item }}.yml"
-        mode: '0600'
-
-    - name: Create {{ item }} plan
-      ansible.builtin.command: "kcli create plan -f /root/{{ item }}.yml {{ item }}"
-      no_log: true
-
+  include_tasks: vm_plans.yml
+  loop_control:
+    loop_var: plan_name
   loop:
     - director
     - idm
