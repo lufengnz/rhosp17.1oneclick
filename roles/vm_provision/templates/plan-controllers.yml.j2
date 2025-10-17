@@ -14,5 +14,8 @@ parameters:
     - size: {{ disk_size_ceph }}
       interface: "sata"
 {% endfor %}
-  nets: "{{ libvirt_networks | map(attribute='name') | union(['default']) | list }}"
+  nets:
+{% for net in libvirt_networks | map(attribute='name') | list %}
+    - {{ net }}
+{% endfor %}
 {% endfor %}

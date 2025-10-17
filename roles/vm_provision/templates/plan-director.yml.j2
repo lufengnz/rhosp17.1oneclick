@@ -9,4 +9,7 @@ director:
   disks:
     - size: {{ disk_size_root }}
       interface: "sata"
-  nets: "{{ libvirt_networks | map(attribute='name') | union(['default']) | list }}"
+  nets: 
+{% for net in libvirt_networks | map(attribute='name') | union(['default']) | list %}
+    - {{ net }}
+{% endfor %}

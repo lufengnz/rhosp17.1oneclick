@@ -6,4 +6,4 @@
 
 - name: Create {{ plan_name }} plan
   ansible.builtin.command: "kcli create plan -f /root/{{ plan_name }}.yml {{ plan_name }}"
-  no_log: true
+  #no_log: true

@@ -9,4 +9,7 @@ compute:
   disks:
     - size: {{ disk_size_root }}
       interface: "sata"
-  nets: "{{ libvirt_networks | map(attribute='name') | list }}"
+  nets: 
+{% for net in libvirt_networks | map(attribute='name') | list %}
+    - {{ net }}
+{% endfor %}

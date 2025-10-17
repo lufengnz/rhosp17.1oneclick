@@ -2,12 +2,14 @@ parameters:
   rhnuser: {{ rhnuser | quote }}
   rhnpassword: {{ rhnpassword | quote }}
 
-vms:
-  idm:
-    image: "rhel8"
-    memory: 8192
-    numcpus: 8
-    disks:
-      - size: {{ disk_size_root }}
-        interface: "sata"
-    nets: "{{ libvirt_networks | map(attribute='name') | union(['default']) | list }}"
+idm:
+  image: "rhel8"
+  memory: 8192
+  numcpus: 8
+  disks:
+   - size: {{ disk_size_root }}
+     interface: "sata"
+  nets: 
+{% for net in libvirt_networks | map(attribute='name') | union(['default']) | list %}
+    - {{ net }}
+{% endfor %}
