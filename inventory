@@ -1,5 +1,5 @@
 [physical_hardware]
-localhost
+localhost ansible_connection=local
 
 [undercloud]
 director ansible_timeout=7200
