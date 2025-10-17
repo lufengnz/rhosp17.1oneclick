@@ -1,4 +1,7 @@
 ---
 # tasks file for virt_bridge
 - name: virt bridge configuration
-  ansible.builtin.include_tasks: bridge.yml  
+  ansible.builtin.include_tasks: bridge.yml
+  loop: "{{ libvirt_networks }}"
+  loop_control:
+    loop_var: network

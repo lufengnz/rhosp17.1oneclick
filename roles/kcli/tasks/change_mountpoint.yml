@@ -26,7 +26,7 @@
 
 - name: Mount all filesystems from fstab if needed
   ansible.builtin.command: mount -a
-  notify: Verify /var/lib/libvirt/images is mounted
+  notify: Verify mounted
 
 - name: Set ACL for root user on /var/lib/libvirt/images
   ansible.posix.acl:
