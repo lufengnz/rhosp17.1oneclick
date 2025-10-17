@@ -24,33 +24,9 @@
     - compute
 
 - name: Start VMs and update /etc/hosts
+  include_tasks: start_vms.yml
   loop:
     - director
     - idm
-  block:
-    - name: Check {{ item }} VM running status
-      ansible.builtin.shell: kcli show vm {{ item }} -f status
-      register: vm_status
-      changed_when: false
-
-    - name: Start {{ item }} VM if not running
-      when: vm_status.stdout != "status: up"
-      ansible.builtin.command: kcli start vm {{ item }}
-      register: start_vm_result
-      failed_when: start_vm_result.rc != 0
-
-    - name: Get {{ item }} VM IP address
-      ansible.builtin.command: kcli show vm {{ item }} -f ip
-      register: vm_ip_result
-      changed_when: false
-      retries: 12
-      delay: 10
-      until: vm_ip_result.stdout | ansible.utils.ipaddr('ipv4')
-
-    - name: Append {{ item }} IP and hostname to /etc/hosts
-      ansible.builtin.lineinfile:
-        path: /etc/hosts
-        line: "{{ vm_ip_result.stdout }} {{ item }}"
-        state: present
-        backup: yes
-      when: vm_ip_result.stdout | ansible.utils.ipaddr('ipv4')
+  loop_control:
+    loop_var: vm_name

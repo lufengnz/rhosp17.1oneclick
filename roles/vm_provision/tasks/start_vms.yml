@@ -1,0 +1,26 @@
+- name: Check {{ vm_name }} VM running status
+  ansible.builtin.shell: kcli show vm {{ vm_name }} -f status
+  register: vm_status
+  changed_when: false
+
+- name: Start {{ vm_name }} VM if not running
+  when: vm_status.stdout != "status: up"
+  ansible.builtin.command: kcli start vm {{ vm_name }}
+  register: start_vm_result
+  failed_when: start_vm_result.rc != 0
+
+- name: Get {{ vm_name }} VM IP address
+  ansible.builtin.command: kcli show vm {{ vm_name }} -f ip
+  register: vm_ip_result
+  changed_when: false
+  retries: 12
+  delay: 10
+  until: vm_ip_result.stdout | ansible.utils.ipaddr('ipv4')
+
+- name: Append {{ vm_name }} IP and hostname to /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ vm_ip_result.stdout }} {{ vm_name }}"
+    state: present
+    backup: yes
+  when: vm_ip_result.stdout | ansible.utils.ipaddr('ipv4')
