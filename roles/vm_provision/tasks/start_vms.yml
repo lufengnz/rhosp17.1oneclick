@@ -4,7 +4,7 @@
   changed_when: false
 
 - name: Start {{ vm_name }} VM if not running
-  when: vm_status.stdout != "status: up"
+  when: 'm_status.stdout != "status: up"'
   ansible.builtin.command: kcli start vm {{ vm_name }}
   register: start_vm_result
   failed_when: start_vm_result.rc != 0
