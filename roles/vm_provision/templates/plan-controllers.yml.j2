@@ -3,8 +3,8 @@ parameters:
   rhnpassword: {{ rhnpassword | quote }}
 
 vms:
-{% for name in vbmc_controller_instances.name %}
-  {{ name }}:
+{% for instance in vbmc_controller_instances %}
+  {{ instance.name }}:
     memory: 32768
     numcpus: 8
     disks:
