@@ -14,16 +14,9 @@
     name: '@idm:DL1/dns'
     state: present
 
-- name: Check if IPA is already configured
-  ansible.builtin.command: ipactl status
-  register: ipa_status
-  ignore_errors: true
-  changed_when: false
-  check_mode: false
-
 - name: Install IPA server with DNS
   ansible.builtin.command: >
-    umask 0022 && ipa-server-install
+    ipa-server-install
     --realm {{ domain_name | upper }}
     --ds-password {{ idm_password | quote }}
     --admin-password {{ idm_password | quote }}
@@ -31,7 +24,5 @@
     --setup-dns
     --auto-forwarders
     --auto-reverse
-  when: ipa_status.rc == 4
   register: ipa_install
   failed_when: ipa_install.rc != 0
-  no_log: true
