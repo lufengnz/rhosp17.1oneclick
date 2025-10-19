@@ -1,6 +1,7 @@
 parameters:
   rhnuser: {{ rhnuser | quote }}
   rhnpassword: {{ rhnpassword | quote }}
+  skip_iso: true
 
 {% for instance in vbmc_controller_instances %}
 {{ instance.name }}:
@@ -9,10 +10,10 @@ parameters:
   numcpus: 8
   disks:
     - size: {{ disk_size_root }}
-      interface: "sata"
+      interface: "virtio"
 {% for i in range(num_ceph_disks | default(3)) %}
     - size: {{ disk_size_ceph }}
-      interface: "sata"
+      interface: "scsi"
 {% endfor %}
   nets:
 {% for net in libvirt_networks | map(attribute='name') | list %}

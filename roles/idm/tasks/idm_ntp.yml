@@ -6,14 +6,5 @@
     state: present
 
 - name: Configure chrony using rhel-system-roles.timesync
-  ansible.builtin.include_role:
-    name: rhel-system-roles.timesync
-  vars:
-    timesync_ntp_servers:
-      - hostname: 192.168.24.254
-        iburst: yes
-    timesync_allow_clients:
-      - 10.0.0.0/24
-      - 192.168.24.0/24
-    timesync_service_state: started
-    timesync_service_enabled: true
+  ansible.builtin.import_role:
+    name: redhat.rhel_system_roles.timesync

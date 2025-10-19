@@ -15,8 +15,22 @@
   register: vbmc_executable
   failed_when: not vbmc_executable.stat.exists
 
-- name: Start vbmcd temporarily to initialize
+- name: Check if vbmcd is already running
+  ansible.builtin.command: pgrep -f vbmcd
+  register: vbmcd_running
+  ignore_errors: yes
+  changed_when: false
+
+- name: Start vbmcd temporarily to initialize (only if not running)
   ansible.builtin.command: /usr/local/bin/vbmcd
+  when: vbmcd_running.rc != 0
+  async: 5
+  poll: 0
+
+- name: Wait a moment for vbmcd to initialize
+  ansible.builtin.wait_for:
+    timeout: 5
+  when: vbmcd_running.rc != 0
 
 - name: Add VirtualBMC instances
   ansible.builtin.command: >
@@ -24,9 +38,9 @@
     --port {{ item.port }}
     --username admin
     --password {{ vbmc_password | quote }}
+  args:
+    creates: "/root/.vbmc/{{ item.name }}"
   loop: "{{ vbmc_controller_instances | union(vbmc_compute_instances) }}"
-  register: vbmc_add
-  failed_when: vbmc_add.rc != 0 and "'already exists' not in vbmc_add.stderr"
 
 - name: Stop any running vbmcd processes
   ansible.builtin.command: pkill vbmcd
@@ -64,15 +78,3 @@
     src: fencing.yaml.j2
     dest: /root/fencing.yaml
     mode: '0644'
-
-- name: Copy files to director
-  ansible.builtin.copy:
-    src: /root/{{ item }}
-    dest: /home/stack/central/{{ item }}
-    owner: stack
-    group: stack
-    mode: '0644'
-  loop:
-    - nodes.yaml
-    - fencing.yaml
-  delegate_to: director 

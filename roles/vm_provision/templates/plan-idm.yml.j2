@@ -1,6 +1,7 @@
 parameters:
   rhnuser: {{ rhnuser | quote }}
   rhnpassword: {{ rhnpassword | quote }}
+  skip_iso: true
 
 idm:
   image: "rhel8"
@@ -10,6 +11,6 @@ idm:
    - size: {{ disk_size_root }}
      interface: "sata"
   nets: 
-{% for net in libvirt_networks | map(attribute='name') | union(['default']) | list %}
+{% for net in ['default'] + (libvirt_networks | map(attribute='name') | list) %}
     - {{ net }}
 {% endfor %}

@@ -1,3 +1,14 @@
+- name: Copy files to director
+  ansible.builtin.copy:
+    src: /root/{{ item }}
+    dest: /home/stack/central/{{ item }}
+    owner: stack
+    group: stack
+    mode: '0644'
+  loop:
+    - nodes.yaml
+    - fencing.yaml
+
 - name: Ensure nodes.yaml file exists
   ansible.builtin.stat:
     path: /home/stack/central/nodes.yaml

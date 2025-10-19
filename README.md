@@ -4,7 +4,7 @@
 Preparation:
 1. Reserve a physical host from beaker;
 2. install packages on physical hosts: 
-# dnf install git ansible-core rhel-system-roles tree -y
+# dnf install git ansible-core rhel-system-roles tree python3-netaddr -y
 3. Git clone the repo:
 # git clone https://github.com/lufengnz/rhosp17.1oneclick.git
 # cd rhosp17.1oneclick/

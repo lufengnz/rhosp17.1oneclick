@@ -7,7 +7,7 @@ Description=vbmc service
 [Service]
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStart=/usr/local/bin/vbmcd --foreground
-{% for instance in vbmc_instances %}
+{% for instance in vbmc_controller_instances | union(vbmc_compute_instances) %}
 ExecStartPost=/usr/local/bin/vbmc start {{ instance.name }}
 {% endfor %}
 Group=root

@@ -10,7 +10,7 @@
   failed_when: start_vm_result.rc != 0
 
 - name: Get {{ vm_name }} VM IP address
-  ansible.builtin.command: kcli show vm {{ vm_name }} -f ip
+  ansible.builtin.command: kcli show vm {{ vm_name }} -f ip --value
   register: vm_ip_result
   changed_when: false
   retries: 12
