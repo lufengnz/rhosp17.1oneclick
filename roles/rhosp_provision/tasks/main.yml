@@ -1,0 +1,13 @@
+---
+# tasks file for rhosp_provision
+- name: director undercloud install
+  ansible.builtin.include_tasks: director_undercloud_install.yml
+
+- name: director privision network
+  ansible.builtin.include_tasks: director_network.yml
+
+- name: director import nodes
+  ansible.builtin.include_tasks: director_import_nodes.yml
+
+- name: director overcloud configure
+  ansible.builtin.include_tasks: director_overcloud_configure.yml

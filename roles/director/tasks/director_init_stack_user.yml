@@ -18,3 +18,49 @@
     group: stack
     mode: '0755'
   loop: "{{ stack_directories }}"
+
+- name: Ensure stack user has SSH key pair
+  ansible.builtin.shell: |
+    if [ ! -f /home/stack/.ssh/id_rsa ]; then
+      ssh-keygen -t rsa -b 2048 -N '' -f /home/stack/.ssh/id_rsa -C 'stack@director'
+    fi
+  args:
+    creates: /home/stack/.ssh/id_rsa
+  become: yes
+  become_user: stack
+
+- name: Add stack's public key to its own authorized_keys
+  ansible.builtin.shell: |
+    cat /home/stack/.ssh/id_rsa.pub >> /home/stack/.ssh/authorized_keys
+  args:
+    executable: /bin/bash
+  become: yes
+  become_user: stack
+
+- name: Setup passwordless SSH from localhost to director as stack
+  block:
+    - name: Generate SSH key on localhost if not exists
+      delegate_to: localhost
+      run_once: true
+      shell: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        if [ ! -f ~/.ssh/id_rsa_director ]; then
+          ssh-keygen -t rsa -b 2048 -N '' -f ~/.ssh/id_rsa_director -C 'ansible@localhost'
+        fi
+      args:
+        creates: "~/.ssh/id_rsa_director"
+
+    - name: Read public key from localhost
+      delegate_to: localhost
+      run_once: true
+      command: cat ~/.ssh/id_rsa_director.pub
+      register: localhost_pubkey
+      changed_when: false
+
+    - name: Add public key to stack's authorized_keys on director
+      authorized_key:
+        user: stack
+        state: present
+        key: "{{ localhost_pubkey.stdout }}"
+  tags: stack_user

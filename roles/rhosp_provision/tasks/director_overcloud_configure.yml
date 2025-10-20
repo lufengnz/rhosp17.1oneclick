@@ -1,7 +1,5 @@
 - name: Set root device size for controller nodes
   ansible.builtin.shell: source ~/stackrc && openstack baremetal node set --property root_device='{"size": "100"}' {{ item }}
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -15,8 +13,6 @@
     openstack baremetal node list -f value -c UUID | while read NODE; do
       openstack baremetal node set --property capabilities="boot_mode:bios,$(openstack baremetal node show $NODE -f json -c properties | jq -r .properties.capabilities | sed 's/boot_mode:[^,]*,//g')" $NODE
     done
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -33,8 +29,6 @@
 
 - name: Overcloud node provision
   ansible.builtin.shell: source ~/stackrc && openstack overcloud node provision --stack central --network-config --output /home/stack/central/overcloud-baremetal-deployed.yaml /home/stack/central/overcloud-baremetal-deploy.yaml
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -43,8 +37,6 @@
 
 - name: Overcloud node provision
   ansible.builtin.shell: source ~/stackrc && openstack tripleo container image prepare -e ~/containers-prepare-parameter.yaml
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -79,8 +71,6 @@
     --container-image-prepare /home/stack/containers-prepare-parameter.yaml \
     /home/stack/central/overcloud-baremetal-deployed.yaml \
     --ntp-server 10.0.0.200
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -121,8 +111,6 @@
 
 - name: Run overcloud deployment script with stackrc environment
   ansible.builtin.shell: source ~/stackrc && ./central/overcloud_deploy.sh
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash

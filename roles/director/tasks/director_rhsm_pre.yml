@@ -5,14 +5,14 @@
   failed_when: release_set.rc != 0
 
 - name: Disable all repositories
-  community.general.redhat_subscription:
-    state: present
-    disable_repos: '*'
+  ansible.builtin.command: subscription-manager repos --disable="*"
 
 - name: Enable required repositories
-  community.general.redhat_subscription:
-    state: present
-    enable_repos: "{{ enabled_repositories }}"
+  ansible.builtin.command: >
+    subscription-manager repos
+    {% for repo in enabled_repositories %}
+    --enable="{{ repo }}"
+    {% endfor %}
 
 - name: Update all packages
   ansible.builtin.dnf:

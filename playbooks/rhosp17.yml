@@ -7,16 +7,28 @@
     - vm_provision
   tags: preconfig
 
-- name: Configure idm VM 
+- name: Configure idm VM
+  remote_user: root
   gather_facts: false
-  hosts: idm
+  hosts: idms
   roles:
     - idm
   tags: idm
 
-- name: Configure director VM 
+- name: Configure director VM
+  become: yes
+  become_user: root
+  remote_user: root
   gather_facts: false
-  hosts: director
+  hosts: undercloud
   roles:
     - director
   tags: director
+
+- name: Configure director VM 
+  gather_facts: false
+  remote_user: stack 
+  hosts: directors
+  roles:
+    - rhosp_provision
+  tags: rhosp

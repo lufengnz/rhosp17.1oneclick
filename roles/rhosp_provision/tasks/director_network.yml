@@ -13,13 +13,9 @@
   loop:
     - /usr/share/rhosp-director-images/ironic-python-agent-latest.tar
     - /usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest.tar
-  become: yes
-  become_user: stack
 
 - name: Upload overcloud images to Glance
   ansible.builtin.shell: source ~/stackrc && openstack overcloud image upload --image-path /home/stack/images/
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -28,8 +24,6 @@
 
 - name: Generate roles_data.yaml for Controller and Compute roles
   ansible.builtin.shell: source ~/stackrc && openstack overcloud role generate -o /home/stack/central/roles_data.yaml Controller Compute
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -85,8 +79,6 @@
 
 - name: Provision overcloud networks
   ansible.builtin.shell: source ~/stackrc && openstack overcloud network provision --output /home/stack/central/overcloud-networks-deployed.yaml /home/stack/central/network_data.yaml
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -101,8 +93,6 @@
 
 - name: Provision overcloud networks vip
   ansible.builtin.shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml
-  become: yes
-  become_user: stack
   args:
     chdir: /home/stack
     executable: /bin/bash

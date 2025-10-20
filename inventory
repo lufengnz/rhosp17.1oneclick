@@ -4,7 +4,10 @@ localhost ansible_connection=local
 [undercloud]
 director ansible_timeout=7200
 
-[idm]
+[directors]
+director ansible_user=stack ansible_ssh_private_key_file=/root/.ssh/id_rsa_director ansible_timeout=7200
+
+[idms]
 idm
 
 [remote_hosts:children]
@@ -12,5 +15,4 @@ undercloud
 idm
 
 [remote_hosts:vars]
-ansible_user=root
 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'

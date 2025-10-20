@@ -1,0 +1,6 @@
+- name: Run undercloud installation
+  ansible.builtin.shell: |
+    source /home/stack/iparc
+    openstack undercloud install
+  environment:
+    HOME: /home/stack

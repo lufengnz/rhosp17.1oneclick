@@ -13,10 +13,11 @@
     mode: '0644'
 
 - name: Run undercloud IPA installation playbook
-  ansible.builtin.command: >
-    source ~/iparc && ansible-playbook
-    --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-    /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
+  ansible.builtin.shell: |
+    source /home/stack/iparc
+    ansible-playbook \
+      --ssh-extra-args '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+      /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
   become: yes
   become_user: stack
   args:
@@ -24,7 +25,6 @@
     executable: /bin/bash
   register: ipa_install_result
   failed_when: ipa_install_result.rc != 0
-  no_log: true
 
 - name: Create TLS parameters file
   ansible.builtin.template:
