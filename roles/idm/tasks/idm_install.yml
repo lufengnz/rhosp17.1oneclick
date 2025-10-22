@@ -24,5 +24,7 @@
     --setup-dns
     --auto-forwarders
     --auto-reverse
+  args:
+    creates: /etc/ipa/default.conf
   register: ipa_install
   failed_when: ipa_install.rc != 0

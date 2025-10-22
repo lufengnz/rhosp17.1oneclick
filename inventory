@@ -2,17 +2,10 @@
 localhost ansible_connection=local
 
 [undercloud]
-director ansible_timeout=7200
+director-root ansible_host=director ansible_user=root ansible_ssh_private_key_file=/root/.ssh/id_rsa ansible_timeout=7200 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 [directors]
-director ansible_user=stack ansible_ssh_private_key_file=/root/.ssh/id_rsa_director ansible_timeout=7200
+director-stack ansible_host=director ansible_user=stack ansible_ssh_private_key_file=/root/.ssh/id_rsa_director ansible_timeout=7200 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 
 [idms]
-idm
-
-[remote_hosts:children]
-undercloud
-idm
-
-[remote_hosts:vars]
-ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+idm ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'

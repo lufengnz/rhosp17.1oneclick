@@ -5,6 +5,12 @@
     - rhel-system-roles
     state: present
 
-- name: Configure chrony using rhel-system-roles.timesync
-  ansible.builtin.import_role:
-    name: redhat.rhel_system_roles.timesync
+- name: Configure chrony 
+  ansible.builtin.copy:
+    src: chrony.conf
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags: idm_ntp
+  notify: Restart chronyd

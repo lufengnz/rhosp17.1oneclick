@@ -4,3 +4,4 @@
     openstack undercloud install
   environment:
     HOME: /home/stack
+  tags: director_undercloud_install

@@ -11,3 +11,8 @@
 
 - name: firewall setup
   ansible.builtin.include_tasks: firewall.yml
+  tags: kcli_firewall
+
+- name: ntp setup
+  ansible.builtin.include_tasks: ntp.yml
+  tags: kcli_ntp

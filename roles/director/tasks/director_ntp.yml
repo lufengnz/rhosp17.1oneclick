@@ -2,9 +2,4 @@
   ansible.builtin.dnf:
     name: 
     - chrony
-    - rhel-system-roles
     state: present
-
-- name: Configure chrony using rhel-system-roles.timesync
-  ansible.builtin.import_role:
-    name: redhat.rhel_system_roles.timesync

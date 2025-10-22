@@ -8,6 +8,7 @@
 
 - name: director subscription manager preparation
   ansible.builtin.include_tasks: director_rhsm_pre.yml
+  tags: director_images
 
 - name: director initate stack user
   ansible.builtin.include_tasks: director_init_stack_user.yml
@@ -18,5 +19,3 @@
 
 - name: director configure tls
   ansible.builtin.include_tasks: director_tls.yml
-
-

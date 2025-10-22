@@ -48,3 +48,8 @@
   when: not ssh_key.stat.exists
   register: keygen_result
   failed_when: keygen_result.rc != 0
+
+- name: Remove ssh known_hosts file
+  ansible.builtin.file:
+    path: /root/.ssh/known_hosts
+    state: absent

@@ -3,6 +3,7 @@
     name: firewalld
     enabled: yes
     state: started
+  tags: kcli_firewall
 
 - name: Add permanent firewall services
   ansible.posix.firewalld:
@@ -10,6 +11,7 @@
     permanent: yes
     state: enabled
   loop: "{{ phy_firewall_services }}"
+  tags: kcli_firewall
   notify: Reload firewalld to apply permanent changes
 
 - name: Add UDP ports 6230-6235 to libvirt zone permanently
@@ -18,5 +20,15 @@
     zone: libvirt
     permanent: yes
     state: enabled
+  tags: kcli_firewall
   notify: Reload firewalld to apply permanent changes
+
+- name: Add UDP ports 6230-6235 to libvirt zone permanently
+  ansible.posix.firewalld:
+    service: ntp
+    zone: libvirt
+    permanent: yes
+    state: enabled
+  tags: kcli_firewall
+  notify: Reload firewalld to apply permanent changes  
 

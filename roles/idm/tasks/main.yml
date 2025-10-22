@@ -5,6 +5,7 @@
 
 - name: idm ntp setup
   ansible.builtin.include_tasks: idm_ntp.yml
+  tags: idm_ntp
 
 - name: idm firewall setup
   ansible.builtin.include_tasks: idm_firewall.yml

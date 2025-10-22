@@ -12,3 +12,10 @@
 - name: Verify mounted
   ansible.builtin.command: findmnt /var/lib/libvirt/images
   changed_when: false
+
+- name: Restart chrony service
+  systemd:
+    name: chronyd
+    state: restarted
+    enabled: yes
+  tags: kcli_ntp

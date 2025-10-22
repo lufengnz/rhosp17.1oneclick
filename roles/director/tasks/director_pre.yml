@@ -4,6 +4,8 @@
 
 - name: Reset connection for new idm FQDN
   ansible.builtin.meta: reset_connection
+  vars:
+    ansible_user: root
 
 - name: Configure eth1 with static IP 192.168.24.100/24
   community.general.nmcli:

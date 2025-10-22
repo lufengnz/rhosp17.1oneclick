@@ -1,15 +1,8 @@
-- name: Install RHOSP director images
-  ansible.builtin.dnf:
-    name:
-      - rhosp-director-images-uefi-x86_64
-      - rhosp-director-images-ipa-x86_64
-    state: present
-    update_cache: yes
-
 - name: Extract RHOSP director images
   ansible.builtin.unarchive:
     src: "{{ item }}"
     dest: /home/stack/images
+    remote_src: yes
   loop:
     - /usr/share/rhosp-director-images/ironic-python-agent-latest.tar
     - /usr/share/rhosp-director-images/overcloud-hardened-uefi-full-latest.tar
@@ -70,7 +63,7 @@
     line: '          end: 10.0.0.100'
     backup: yes
 
-- name: Remove vlan: 10 line from network_data.yaml
+- name: Remove vlan 10 line from network_data.yaml
   ansible.builtin.lineinfile:
     path: /home/stack/central/network_data.yaml
     regexp: '^      vlan: 10$'
@@ -78,7 +71,7 @@
     backup: yes
 
 - name: Provision overcloud networks
-  ansible.builtin.shell: source ~/stackrc && openstack overcloud network provision --output /home/stack/central/overcloud-networks-deployed.yaml /home/stack/central/network_data.yaml
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud network provision --output /home/stack/central/overcloud-networks-deployed.yaml /home/stack/central/network_data.yaml -y
   args:
     chdir: /home/stack
     executable: /bin/bash
@@ -92,7 +85,7 @@
   failed_when: not networks_deployed.stat.exists 
 
 - name: Provision overcloud networks vip
-  ansible.builtin.shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml
+  ansible.builtin.shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml -y
   args:
     chdir: /home/stack
     executable: /bin/bash

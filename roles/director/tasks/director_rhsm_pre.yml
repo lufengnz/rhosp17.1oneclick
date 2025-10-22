@@ -31,3 +31,12 @@
       - ipmitool
     state: present
     update_cache: yes
+
+- name: Install RHOSP director images
+  ansible.builtin.dnf:
+    name:
+      - rhosp-director-images-uefi-x86_64
+      - rhosp-director-images-ipa-x86_64
+    state: present
+    update_cache: yes
+  tags: director_images
