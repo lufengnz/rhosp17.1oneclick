@@ -7,6 +7,16 @@
     - vm_provision
   tags: preconfig
 
+- name: Wait 2 minutes before configuring IDM
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  run_once: true
+  tasks:
+    - name: Pause for 2 minutes to allow VMs to stabilize
+      ansible.builtin.pause:
+        minutes: 2
+
 - name: Configure idm VM
   remote_user: root
   gather_facts: false

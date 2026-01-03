@@ -1,2 +1,7 @@
 ---
 # handlers file for director
+- name: Start haveged
+  ansible.builtin.service:
+    name: haveged
+    state: started
+    enabled: yes

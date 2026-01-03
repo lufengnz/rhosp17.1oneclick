@@ -60,7 +60,7 @@
   ansible.builtin.lineinfile:
     path: /home/stack/central/network_data.yaml
     regexp: '^          end: 10.0.0.250$'
-    line: '          end: 10.0.0.100'
+    line: '          end: 10.0.0.90'
     backup: yes
 
 - name: Remove vlan 10 line from network_data.yaml
@@ -85,7 +85,7 @@
   failed_when: not networks_deployed.stat.exists 
 
 - name: Provision overcloud networks vip
-  ansible.builtin.shell: source ~/stackrc && openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml -y
+  ansible.builtin.shell: source ~/stackrc && ANSIBLE_TIMEOUT=1200 openstack overcloud network vip provision --stack central --output /home/stack/central/overcloud-vip-deployed.yaml /home/stack/central/vip_data.yaml -y
   args:
     chdir: /home/stack
     executable: /bin/bash
